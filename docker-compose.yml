@@ -63,8 +63,10 @@ services:
   # Eureka Service Discovery
   eureka-server:
     build:
-      context: ./eureka-server
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: eureka-server
     container_name: eureka-server
     ports:
       - "8761:8761"
@@ -80,8 +82,10 @@ services:
   # API Gateway
   api-gateway:
     build:
-      context: ./api-gateway
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: api-gateway
     container_name: api-gateway
     ports:
       - "8090:8080"
@@ -104,24 +108,28 @@ services:
   # Auth Service
   auth-service:
     build:
-      context: ./auth-service
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: auth-service
     container_name: auth-service
     ports:
       - "8081:8081"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/auth_service_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/auth_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
       eureka-server:
         condition: service_healthy
-      postgres:
-        condition: service_healthy
       kafka:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - microservices-network
@@ -130,24 +138,28 @@ services:
   # Menu Service
   menu-service:
     build:
-      context: ./menu-service
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: menu-service
     container_name: menu-service
     ports:
       - "8082:8082"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/menu_service_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/menu_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
       eureka-server:
         condition: service_healthy
-      postgres:
-        condition: service_healthy
       kafka:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - microservices-network
@@ -156,22 +168,22 @@ services:
   # Order Service
   order-service:
     build:
-      context: ./order-service
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: order-service
     container_name: order-service
     ports:
       - "8083:8083"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/order_service_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/order_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     depends_on:
       eureka-server:
-        condition: service_healthy
-      postgres:
         condition: service_healthy
       kafka:
         condition: service_healthy
@@ -182,22 +194,22 @@ services:
   # Profile Service
   profile-service:
     build:
-      context: ./profile-service
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: profile-service
     container_name: profile-service
     ports:
       - "8084:8084"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/profile_service_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/profile_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     depends_on:
       eureka-server:
-        condition: service_healthy
-      postgres:
         condition: service_healthy
       kafka:
         condition: service_healthy
@@ -208,22 +220,22 @@ services:
   # Reservation Service
   reservation-service:
     build:
-      context: ./reservation-service
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: reservation-service
     container_name: reservation-service
     ports:
       - "8085:8085"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/reservation_service_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/reservation_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     depends_on:
       eureka-server:
-        condition: service_healthy
-      postgres:
         condition: service_healthy
       kafka:
         condition: service_healthy
@@ -234,22 +246,22 @@ services:
   # Table Service
   table-service:
     build:
-      context: ./table-service
+      context: .
       dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: table-service
     container_name: table-service
     ports:
       - "8086:8086"
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/table_service_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/table_service_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     depends_on:
       eureka-server:
-        condition: service_healthy
-      postgres:
         condition: service_healthy
       kafka:
         condition: service_healthy
