@@ -1,29 +1,73 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.7'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.boot' version '3.5.7' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
 group = 'com.restaurant'
 version = '0.0.1-SNAPSHOT'
-description = 'VNPAY_Microservices'
+description = 'VNPAY Microservices Architecture'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+// Common configuration for all projects
+allprojects {
+    group = 'com.restaurant'
+    version = '0.0.1-SNAPSHOT'
+    
+    repositories {
+        mavenCentral()
     }
 }
 
-repositories {
-    mavenCentral()
+// Configuration for all subprojects (excluding root)
+subprojects {
+    apply plugin: 'java'
+    
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+    
+    // Apply Spring Boot to service modules (not common modules)
+    if (!project.name.contains('module')) {
+        apply plugin: 'org.springframework.boot'
+        apply plugin: 'io.spring.dependency-management'
+    }
+    
+    // Common dependencies for all subprojects
+    dependencies {
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+    
+    // Common Spring Cloud version
+    ext {
+        set('springCloudVersion', "2025.0.0")
+    }
+    
+    // Apply Spring Cloud dependency management for services with Eureka/Cloud dependencies
+    if (project.name in ['api-gateway', 'auth-service', 'menu-service', 'order-service', 
+                          'profile-service', 'table-service', 'reservation-service', 'eureka-server']) {
+        apply plugin: 'io.spring.dependency-management'
+        
+        dependencyManagement {
+            imports {
+                mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+            }
+        }
+    }
+    
+    // Test configuration
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
 }
 
-dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
+// Wrapper configuration
+wrapper {
+    gradleVersion = '8.5'
+    distributionType = Wrapper.DistributionType.ALL
 }

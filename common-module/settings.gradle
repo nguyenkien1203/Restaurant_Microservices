@@ -1,4 +1,0 @@
-rootProject.name = 'common-module'
-
-include('redis-module')
-include('factory-module')

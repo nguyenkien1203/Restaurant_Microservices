@@ -20,6 +20,7 @@ import org.springframework.data.redis.connection.lettuce.LettucePoolingClientCon
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
 import java.util.HashSet;
@@ -189,6 +190,15 @@ public class RedisConfig {
         
         template.afterPropertiesSet();
         return template;
+    }
+    
+    /**
+     * Configure ObjectMapper for CacheService
+     */
+    @Bean
+    @ConditionalOnMissingBean(ObjectMapper.class)
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
     }
 }
 

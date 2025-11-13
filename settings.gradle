@@ -1,13 +1,17 @@
 rootProject.name = 'VNPAY_Microservices'
 
-include('api-gateway')
-include('auth-service')
+// Common modules
 include('common-module')
 include('common-module:redis-module')
 include('common-module:factory-module')
-include('order-service')
-include('config-service')
+
+// Infrastructure services
 include('eureka-server')
+include('config-service')
+include('api-gateway')
+
+// Business services
+include('auth-service')
 include('menu-service')
 include('order-service')
 include('profile-service')
