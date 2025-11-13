@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  redis-standalone:
+    image: redis:7-alpine
+    container_name: redis-standalone
+    command: redis-server --requirepass redis123
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-standalone-data:/data
+    networks:
+      - redis-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis-standalone:6379:0:redis123
+    ports:
+      - "8081:8081"
+    networks:
+      - redis-network
+    depends_on:
+      - redis-standalone
+
+volumes:
+  redis-standalone-data:
+
+networks:
+  redis-network:
+    driver: bridge
+

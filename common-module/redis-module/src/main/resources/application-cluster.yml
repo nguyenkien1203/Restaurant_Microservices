@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: redis-module
+  data:
+    redis:
+      # Redis deployment mode: STANDALONE, SENTINEL, or CLUSTER
+      mode: CLUSTER
+      # Redis password (if required)
+      password: ${REDIS_PASSWORD:}
+      # Connection timeout
+      timeout: 60s
+      # Cluster configuration
+      cluster:
+        # Cluster nodes (host:port)
+        nodes:
+          - redis-cluster-node1:6379
+          - redis-cluster-node2:6379
+          - redis-cluster-node3:6379
+          - redis-cluster-node4:6379
+          - redis-cluster-node5:6379
+          - redis-cluster-node6:6379
+        # Maximum number of redirects to follow when executing commands
+        max-redirects: 3
+      # Lettuce connection pool configuration
+      lettuce:
+        max-active: 32
+        max-idle: 16
+        min-idle: 4
+        max-wait: 3000ms
+        time-between-eviction-runs: 30s
+

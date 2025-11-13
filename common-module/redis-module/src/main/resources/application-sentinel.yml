@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: redis-module
+  data:
+    redis:
+      # Redis deployment mode: STANDALONE, SENTINEL, or CLUSTER
+      mode: SENTINEL
+      # Database index (0-15)
+      database: 0
+      # Redis password (if required)
+      password: ${REDIS_PASSWORD:}
+      # Connection timeout
+      timeout: 60s
+      # Sentinel configuration
+      sentinel:
+        # Master name configured in sentinel
+        master: mymaster
+        # Sentinel nodes (host:port)
+        nodes:
+          - sentinel1:26379
+          - sentinel2:26379
+          - sentinel3:26379
+        # Sentinel password (if different from Redis password)
+        password: ${SENTINEL_PASSWORD:}
+      # Lettuce connection pool configuration
+      lettuce:
+        max-active: 16
+        max-idle: 8
+        min-idle: 2
+        max-wait: 3000ms
+        time-between-eviction-runs: 30s
+

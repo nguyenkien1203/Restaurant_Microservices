@@ -1,13 +1,13 @@
-package com.restaurant.commonmodule;
+package com.restaurant.redismodule;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class CommonModuleApplication {
+public class RedisModuleApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(CommonModuleApplication.class, args);
+		SpringApplication.run(RedisModuleApplication.class, args);
 	}
 
 }
