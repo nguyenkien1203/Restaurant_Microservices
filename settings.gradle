@@ -4,6 +4,8 @@ rootProject.name = 'VNPAY_Microservices'
 include('common-module')
 include('common-module:redis-module')
 include('common-module:factory-module')
+include('common-module:data')
+include('common-module:utils')
 
 // Infrastructure services
 include('eureka-server')

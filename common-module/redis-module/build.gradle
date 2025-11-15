@@ -1,45 +1,16 @@
-plugins {
-	id 'java-library'
-	id 'org.springframework.boot' version '3.5.7'
-	id 'io.spring.dependency-management' version '1.1.7'
-}
-
-group = 'com.restaurant'
-version = '0.0.1-SNAPSHOT'
-description = 'redis-module'
-
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
-}
-
-repositories {
-	mavenCentral()
-}
+description = 'Redis Module - Redis caching and data access'
 
 dependencies {
+	// Spring Redis
 	api 'org.springframework.boot:spring-boot-starter-data-redis'
 	api 'io.lettuce:lettuce-core'
 	api 'org.apache.commons:commons-pool2'
 	api 'com.fasterxml.jackson.core:jackson-databind'
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
+	
+	// Internal modules
+	api project(':common-module:data')
+	api project(':common-module:utils')
+	
+	// Configuration processor
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-// Disable bootJar task since this is a library, not an executable
-bootJar {
-	enabled = false
-}
-
-// Enable plain jar for library
-jar {
-	enabled = true
-}
-
-tasks.named('test') {
-	useJUnitPlatform()
 }
