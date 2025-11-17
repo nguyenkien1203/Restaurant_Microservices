@@ -1,29 +1,18 @@
 description = 'Authentication Service - Handles user authentication and authorization'
 
 dependencies {
-	// Spring Boot Starters
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	// Service-specific: Spring Security
+	api 'org.springframework.boot:spring-boot-starter-security'
 	
-	// Spring Cloud
-	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-	
-	// Messaging
-	implementation 'org.springframework.kafka:spring-kafka'
-	
-	// JWT
-	implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
-	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
-	
-	// Database
-	runtimeOnly 'org.postgresql:postgresql'
+	// Service-specific: JWT for token-based authentication
+	api "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
+	runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
+	runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
 	
 	// Internal modules
-	implementation project(':common-module:redis-module')
+	api project(':common-module:redis-module')
+	api project(':common-module:factory-module')
+
 	
 	// Testing
 	testImplementation 'org.springframework.security:spring-security-test'

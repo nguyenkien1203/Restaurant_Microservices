@@ -60,11 +60,19 @@ management:
     health:
       show-details: always
 
-# JWT Configuration (Add your secret key)
+# JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:your-secret-key-change-this-in-production-min-256-bits}
+  # Legacy HMAC secret (for backward compatibility with JwtUtils)
+  secret: JrqaDYf2smUIwjvb96nBvnNdeT3OQX1vf1N9CHJpfps=
   expiration: 86400000 # 24 hours in milliseconds
   refresh-expiration: 604800000 # 7 days in milliseconds
+  
+  # JWE/JWS Configuration (RSA-based)
+  expiration-days: 7 # Token expiration in days
+  refresh-expiration-days: 30 # Refresh token expiration in days
+  key-size: 2048 # RSA key size (2048 or 4096)
+  enable-encryption: true # Enable JWE encryption
+  key-rotation-days: 90 # Key rotation interval in days
 
 logging:
   level:

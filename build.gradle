@@ -45,6 +45,11 @@ ext {
     springBootVersion = '3.5.7'
     springCloudVersion = "2025.0.0"
     springFrameworkVersion = '6.2.11'
+
+    /**
+     * JWT version
+     */
+    jjwtVersion = '0.12.3'
 }
 
 // Common configuration for all projects
@@ -88,12 +93,12 @@ subprojects {
     }
 
     // Exclude config files from jar packaging
-    tasks.withType(ProcessResources).configureEach {
-        exclude '/*.yaml'
-        exclude '/*.yml'
-        exclude '/config/*.yml'
-        exclude '/config/*.yaml'
-    }
+//    tasks.withType(ProcessResources).configureEach {
+//        exclude '/*.yaml'
+//        exclude '/*.yml'
+//        exclude '/config/*.yml'
+//        exclude '/config/*.yaml'
+//    }
 
     dependencyManagement {
         imports {
@@ -132,6 +137,32 @@ subprojects {
          */
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    // Common service dependencies (excluding api-gateway and library modules)
+    if (!project.name.contains('module') && 
+        !project.name.contains('data') && 
+        !project.name.contains('utils') && 
+        !project.name.equals('api-gateway') &&
+        !project.name.equals('eureka-server') &&
+        !project.name.equals('config-service')) {
+        
+        dependencies {
+            // Spring Boot Starters
+            implementation 'org.springframework.boot:spring-boot-starter-web'
+            implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+            implementation 'org.springframework.boot:spring-boot-starter-actuator'
+            implementation 'org.springframework.boot:spring-boot-starter-validation'
+            
+            // Spring Cloud
+            implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+            
+            // Messaging
+            implementation 'org.springframework.kafka:spring-kafka'
+            
+            // Database
+            runtimeOnly 'org.postgresql:postgresql'
+        }
     }
 
     // Apply Spring Boot to service modules (not common modules)
