@@ -5,7 +5,7 @@ import com.restaurant.redismodule.exception.CacheException;
 import java.time.Duration;
 import java.util.List;
 
-public interface ICacheService<T> {
+public interface ICacheService {
     /**
      * Gets cache.
      *

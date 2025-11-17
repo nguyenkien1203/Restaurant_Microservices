@@ -3,4 +3,6 @@ description = 'Factory Module - Factory pattern implementations'
 dependencies {
     // Spring Boot Starter
     implementation 'org.springframework.boot:spring-boot-starter'
+    api project(':common-module:data')
+    api project(':common-module:redis-module')
 }
