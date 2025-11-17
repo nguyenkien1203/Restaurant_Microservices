@@ -1,29 +1,164 @@
 plugins {
+    id 'java-library'
     id 'java'
-    id 'org.springframework.boot' version '3.5.7'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'idea'
+    id 'org.springframework.boot' version '3.5.7' apply false
+    id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
 group = 'com.restaurant'
 version = '0.0.1-SNAPSHOT'
-description = 'VNPAY_Microservices'
+description = 'Microservices Architecture'
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+ext {
+    /**
+     * commons-lang3
+     */
+    commonsLang3Version = "3.19.0"
+
+    /**
+     * log version
+     */
+    slf4jVersion = "2.1.0-alpha1"
+
+    /**
+     * lombok version
+     */
+    lombokVersion = '1.18.42'
+
+    /**
+     * Jackson
+     */
+    jacksonVersion = '2.20.0'
+    jacksonDataformatVersion = "2.20.0"
+    jacksonAnnotationsVersion = "3.0-rc5"
+
+    /**
+     * spring version
+     */
+    springDependencyManagementVersion = '1.1.7'
+    springBootVersion = '3.5.7'
+    springCloudVersion = "2025.0.0"
+    springFrameworkVersion = '6.2.11'
+}
+
+// Common configuration for all projects
+allprojects {
+    group = 'com.restaurant'
+    version = '0.0.1-SNAPSHOT'
+    
+    repositories {
+        mavenCentral()
     }
 }
 
-repositories {
-    mavenCentral()
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: 'io.spring.dependency-management'
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    // Exclude unwanted dependencies
+    configurations {
+        configureEach {
+            exclude group: 'commons-logging', module: 'commons-logging'
+            exclude group: 'org.springframework.boot', module: 'spring-boot-starter-webflux'
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+    }
+
+    // Exclude config files from jar packaging
+    tasks.withType(ProcessResources).configureEach {
+        exclude '/*.yaml'
+        exclude '/*.yml'
+        exclude '/config/*.yml'
+        exclude '/config/*.yaml'
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.boot:spring-boot-dependencies:$springBootVersion"
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion"
+        }
+    }
+
+    dependencies {
+        /**
+         * Logging
+         */
+        api "org.slf4j:slf4j-api:$slf4jVersion"
+
+        /**
+         * Lombok
+         */
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+        /**
+         * Jackson
+         */
+        api "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonDataformatVersion"
+        api "com.fasterxml.jackson.core:jackson-annotations:$jacksonAnnotationsVersion"
+        api "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
+        api "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion"
+
+        /**
+         * Apache commons
+         */
+        api "org.apache.commons:commons-lang3:$commonsLang3Version"
+
+        /**
+         * Testing
+         */
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+
+    // Apply Spring Boot to service modules (not common modules)
+    if (!project.name.contains('module') && !project.name.contains('data') && !project.name.contains('utils')) {
+        apply plugin: 'org.springframework.boot'
+    }
+
+    // Disable bootJar for library modules
+    if (project.name.contains('module') || project.name.contains('data') || project.name.contains('utils')) {
+        if (tasks.findByName('bootJar')) {
+            bootJar {
+                enabled = false
+            }
+        }
+        jar {
+            enabled = true
+        }
+    }
+
+    // Test configuration
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
 }
 
-dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
+// Wrapper configuration
+wrapper {
+    gradleVersion = '8.5'
+    distributionType = Wrapper.DistributionType.ALL
 }

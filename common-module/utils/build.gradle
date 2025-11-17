@@ -1,0 +1,6 @@
+description = 'Utils Module - Common utility classes and helpers'
+
+dependencies {
+    // Spring Boot Starter
+    api 'org.springframework.boot:spring-boot-starter'
+}

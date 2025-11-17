@@ -1,0 +1,16 @@
+description = 'Redis Module - Redis caching and data access'
+
+dependencies {
+	// Spring Redis
+	api 'org.springframework.boot:spring-boot-starter-data-redis'
+	api 'io.lettuce:lettuce-core'
+	api 'org.apache.commons:commons-pool2'
+	api 'com.fasterxml.jackson.core:jackson-databind'
+	
+	// Internal modules
+	api project(':common-module:data')
+	api project(':common-module:utils')
+	
+	// Configuration processor
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+}
