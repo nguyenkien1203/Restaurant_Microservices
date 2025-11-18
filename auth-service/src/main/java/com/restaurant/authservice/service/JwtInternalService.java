@@ -72,5 +72,19 @@ public interface JwtInternalService {
      * @return EC private JWK
      */
     EcPrivateJwk generateEcJwk(KeyPair keyPair);
+    
+    /**
+     * Generate access token (JWE with short expiration)
+     * @param claims Claims to include in the token
+     * @return Encrypted and signed access token
+     */
+    String generateAccessToken(Map<String, Object> claims);
+    
+    /**
+     * Generate refresh token (JWE with longer expiration)
+     * @param claims Claims to include in the token
+     * @return Encrypted and signed refresh token
+     */
+    String generateRefreshToken(Map<String, Object> claims);
 }
 

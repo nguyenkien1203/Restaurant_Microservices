@@ -35,9 +35,12 @@ public class JwtServiceImpl implements JwtInternalService, JwtExternalService {
     
     @Getter
     private PublicKey sigPublicKey;
-    
-    @Value("${jwt.expiration-days:7}")
-    private int expirationDays;
+
+    @Value("${jwt.access-token-expiration-ms:900000}") // Default 15 mins
+    private long accessTokenExpirationMs;
+
+    @Value("${jwt.refresh-token-expiration-ms:604800000}") // Default 7 days
+    private long refreshTokenExpirationMs;
     
     @Value("${jwt.key-size:2048}")
     private int keySize;
@@ -98,7 +101,8 @@ public class JwtServiceImpl implements JwtInternalService, JwtExternalService {
     @Override
     public String generateJwsToken(Map<String, Object> claims) {
         Date now = new Date();
-        Date expiration = new Date(now.getTime() + (1000L * 60 * 60 * 24 * expirationDays));
+        // Use access token expiration as default for generic JWS tokens
+        Date expiration = new Date(now.getTime() + accessTokenExpirationMs);
         
         return Jwts.builder()
                 .claims(claims)
@@ -156,33 +160,67 @@ public class JwtServiceImpl implements JwtInternalService, JwtExternalService {
                 .idFromThumbprint()
                 .build();
     }
-    
     /**
-     * Generate token with custom expiration time
-     * @param claims Token claims
-     * @param expirationMillis Expiration time in milliseconds
-     * @return JWS token
+     * Generate access Token
+     * @param claims Claims to include in the token
+     * @return Encrypted and signed access token
      */
-    public String generateJwsTokenWithExpiration(Map<String, Object> claims, long expirationMillis) {
+    @Override
+    public String generateAccessToken(Map<String, Object> claims) {
+        // 1. Enforce Short Expiration
         Date now = new Date();
-        Date expiration = new Date(now.getTime() + expirationMillis);
+        Date expiry = new Date(now.getTime() + accessTokenExpirationMs);
         
-        return Jwts.builder()
+        // 2. Tag it as Access Token (Security Best Practice)
+        claims.put("type", "ACCESS");
+        
+        String jws = Jwts.builder()
                 .claims(claims)
                 .issuedAt(now)
-                .expiration(expiration)
+                .expiration(expiry)
                 .signWith(sigPrivateKey, Jwts.SIG.RS256)
+                .compact();
+        
+        return Jwts.builder()
+                .content(jws)
+                .encryptWith(encPublicKey, Jwts.KEY.RSA_OAEP_256, Jwts.ENC.A256GCM)
                 .compact();
     }
     
     /**
-     * Validate token and check if it's expired
-     * @param token Token to validate
+     * Generate Refresh Token
+     * @param claims Claims to include in the token
+     * @return Encrypted and signed refresh token
+     */
+    @Override
+    public String generateRefreshToken(Map<String, Object> claims) {
+        // 1. Enforce Longer Expiration
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + refreshTokenExpirationMs);
+        
+        // 2. Tag it as Refresh Token (Security Best Practice)
+        claims.put("type", "REFRESH");
+        
+        String jws = Jwts.builder()
+                .claims(claims)
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(sigPrivateKey, Jwts.SIG.RS256)
+                .compact();
+        
+        return Jwts.builder()
+                .content(jws)
+                .encryptWith(encPublicKey, Jwts.KEY.RSA_OAEP_256, Jwts.ENC.A256GCM)
+                .compact();
+    }
+    /**
+     * Validate JWE token and check if it's expired
+     * @param token JWE token to validate
      * @return true if token is valid and not expired
      */
     public boolean validateToken(String token) {
         try {
-            parseJwsPayload(token);
+            parseJwePayload(token);
             return true;
         } catch (Exception e) {
             return false;
@@ -190,29 +228,75 @@ public class JwtServiceImpl implements JwtInternalService, JwtExternalService {
     }
     
     /**
-     * Extract specific claim from token
-     * @param token JWS token
+     * Extract specific claim from JWE token
+     * @param token JWE token
      * @param claimKey Claim key
      * @param claimType Claim type class
      * @return Claim value
      */
     public <T> T extractClaim(String token, String claimKey, Class<T> claimType) {
-        Claims claims = parseJwsPayload(token);
+        Claims claims = parseJwePayload(token);
         return claims.get(claimKey, claimType);
     }
     
     /**
-     * Check if token is expired
-     * @param token JWS token
+     * Check if JWE token is expired
+     * @param token JWE token
      * @return true if expired
      */
     public boolean isTokenExpired(String token) {
         try {
-            Claims claims = parseJwsPayload(token);
+            Claims claims = parseJwePayload(token);
             return claims.getExpiration().before(new Date());
         } catch (Exception e) {
             return true;
         }
+    }
+    
+    /**
+     * Check if token is an access token
+     * @param token JWE token
+     * @return true if token type is ACCESS
+     */
+    public boolean isAccessToken(String token) {
+        try {
+            Claims claims = parseJwePayload(token);
+            return "ACCESS".equals(claims.get("type", String.class));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Check if token is a refresh token
+     * @param token JWE token
+     * @return true if token type is REFRESH
+     */
+    public boolean isRefreshToken(String token) {
+        try {
+            Claims claims = parseJwePayload(token);
+            return "REFRESH".equals(claims.get("type", String.class));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Validate access token - checks validity and token type
+     * @param token JWE access token
+     * @return true if valid access token
+     */
+    public boolean validateAccessToken(String token) {
+        return validateToken(token) && isAccessToken(token);
+    }
+    
+    /**
+     * Validate refresh token - checks validity and token type
+     * @param token JWE refresh token
+     * @return true if valid refresh token
+     */
+    public boolean validateRefreshToken(String token) {
+        return validateToken(token) && isRefreshToken(token);
     }
 }
 

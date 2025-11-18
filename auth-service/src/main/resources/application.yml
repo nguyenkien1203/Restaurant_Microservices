@@ -64,15 +64,21 @@ management:
 jwt:
   # Legacy HMAC secret (for backward compatibility with JwtUtils)
   secret: JrqaDYf2smUIwjvb96nBvnNdeT3OQX1vf1N9CHJpfps=
-  expiration: 86400000 # 24 hours in milliseconds
-  refresh-expiration: 604800000 # 7 days in milliseconds
+  expiration: 86400000 # 24 hours in milliseconds (for JwtUtils)
+  refresh-expiration: 604800000 # 7 days in milliseconds (for JwtUtils)
   
   # JWE/JWS Configuration (RSA-based)
-  expiration-days: 7 # Token expiration in days
-  refresh-expiration-days: 30 # Refresh token expiration in days
+  access-token-expiration-ms: 900000 # 15 minutes (recommended for access tokens)
+  refresh-token-expiration-ms: 604800000 # 7 days
   key-size: 2048 # RSA key size (2048 or 4096)
   enable-encryption: true # Enable JWE encryption
   key-rotation-days: 90 # Key rotation interval in days
+  
+  # Cookie Configuration (for web application)
+  cookie:
+    # Set to true in production (HTTPS only)
+    domain: # Leave empty for same domain, or set to .yourdomain.com
+    # Strict, Lax, or None (None requires Secure=true)
 
 logging:
   level:
