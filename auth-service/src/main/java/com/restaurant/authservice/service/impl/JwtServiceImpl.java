@@ -130,14 +130,13 @@ public class JwtServiceImpl implements JwtInternalService, JwtExternalService {
     public Claims parseJwePayload(String jwe) {
         try {
             // First decrypt the JWE to get the JWS token
-            String jwsToken = Jwts.parser()
+            byte[] jwsBytes = Jwts.parser()
                     .decryptWith(encPrivateKey)
                     .build()
                     .parseEncryptedContent(jwe)
-                    .getPayload()
-                    .toString();
-            
-            // Then parse and verify the JWS token
+                    .getPayload();
+
+            String jwsToken = new String(jwsBytes, java.nio.charset.StandardCharsets.UTF_8);
             return parseJwsPayload(jwsToken);
         } catch (Exception e) {
             log.error("Failed to parse JWE token", e);

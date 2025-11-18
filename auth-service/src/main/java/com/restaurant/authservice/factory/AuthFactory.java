@@ -51,6 +51,7 @@ public class AuthFactory extends BaseCrudFactory<Long, AuthDto, Long, AuthEntity
                 .email(model.getEmail())
                 .password(model.getPassword())
                 .isActive(model.getIsActive())
+                .role(model.getRole() != null ? model.getRole() : AuthEntity.UserRole.USER)
                 .build();
     }
 
@@ -64,6 +65,9 @@ public class AuthFactory extends BaseCrudFactory<Long, AuthDto, Long, AuthEntity
         }
         if (model.getIsActive() != null) {
             oldEntity.setIsActive(model.getIsActive());
+        }
+        if (model.getRole() != null) {
+            oldEntity.setRole(model.getRole());
         }
         return oldEntity;
     }
@@ -103,7 +107,7 @@ public class AuthFactory extends BaseCrudFactory<Long, AuthDto, Long, AuthEntity
     }
 
     @Override
-    protected <F extends IFilter> boolean exists(Long id, F filter) throws DataFactoryException {
+    public <F extends IFilter> boolean exists(Long id, F filter) throws DataFactoryException {
         if (id != null) {
             return crudRepository.existsById(id);
         }
@@ -136,5 +140,6 @@ public class AuthFactory extends BaseCrudFactory<Long, AuthDto, Long, AuthEntity
             default -> AuthEntity.UserRole.USER;
         };
     }
+
 }
 
