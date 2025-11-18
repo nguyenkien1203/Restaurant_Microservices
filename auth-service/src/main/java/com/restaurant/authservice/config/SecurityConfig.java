@@ -36,7 +36,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // Still disable generic CSRF for now
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/logout").permitAll() // Public endpoints
+                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/logout", "/api/auth/refresh").permitAll() // Public endpoints
                         .requestMatchers("/api/auth/me").authenticated() // Requires authentication
                         .anyRequest().authenticated()
                 )

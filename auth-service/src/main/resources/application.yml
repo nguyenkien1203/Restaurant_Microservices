@@ -86,7 +86,9 @@ jwt:
   
   # Cookie Configuration
   cookie-name: auth_token
+  refresh-cookie-name: refresh_auth_token
   expiration-days: 7
+  refresh-expiration-days: 30
 
 logging:
   level:

@@ -31,4 +31,29 @@ public class CookieService {
                 .maxAge(0) // Expire immediately
                 .build();
     }
+
+    public ResponseCookie createRefreshTokenCookie(String token) {
+        return ResponseCookie.from("refresh_" + cookieName, token)
+                .httpOnly(true)
+                .secure(false)
+                .path("/api/auth") // Available for all auth endpoints
+                .maxAge(30 * 24 * 60 * 60) // 30 days
+                .sameSite("Lax")
+                .domain(null)
+                .build();
+    }
+
+    public ResponseCookie deleteRefreshTokenCookie() {
+        return ResponseCookie.from("refresh_" + cookieName, "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/api/auth")
+                .maxAge(0) // Expire immediately
+                .build();
+    }
+    
+    public String getRefreshTokenCookieName() {
+        return "refresh_" + cookieName;
+    }
+
 }
