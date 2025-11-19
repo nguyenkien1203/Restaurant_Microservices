@@ -11,6 +11,7 @@ import jakarta.servlet.http.Cookie;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -66,13 +69,19 @@ public class JwtCookieFilter extends OncePerRequestFilter {
                 // 3. Parse Token - Using JWE (encrypted tokens)
                 Claims claims = jwtService.parseJwePayload(token);
 
-                // 4. Create Authentication Object
+                // 4. Create Authentication Object with roles
                 String username = claims.getSubject();
+                String role = claims.get("role", String.class);
+                
+                // Convert role to Spring Security authorities
+                List<SimpleGrantedAuthority> authorities = role != null 
+                    ? Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
+                    : Collections.emptyList();
 
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         username,
                         null,
-                        java.util.Collections.emptyList() // Add authorities/roles here
+                        authorities
                 );
 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -91,13 +100,19 @@ public class JwtCookieFilter extends OncePerRequestFilter {
                         if (jwtService.validateRefreshToken(refreshToken)) {
                             Claims refreshClaims = jwtService.parseJwePayload(refreshToken);
                             String username = refreshClaims.getSubject();
+                            String role = refreshClaims.get("role", String.class);
+                            
+                            // Convert role to Spring Security authorities
+                            List<SimpleGrantedAuthority> authorities = role != null 
+                                ? Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
+                                : Collections.emptyList();
                             
                             // Set authentication from refresh token
                             // Note: Client should call /auth/refresh endpoint to get a new access token
                             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                                     username,
                                     null,
-                                    java.util.Collections.emptyList()
+                                    authorities
                             );
                             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                             SecurityContextHolder.getContext().setAuthentication(authToken);
