@@ -172,9 +172,13 @@ public class JwtServiceImpl implements JwtInternalService, JwtExternalService {
 
             String jwsToken = new String(jwsBytes, java.nio.charset.StandardCharsets.UTF_8);
             return parseJwsPayload(jwsToken);
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            // Token expired - this is normal, just re-throw without error logging
+            log.debug("JWE token has expired: {}", e.getMessage());
+            throw e;
         } catch (Exception e) {
             log.error("Failed to parse JWE token", e);
-            throw new RuntimeException("Invalid or expired JWE token", e);
+            throw new RuntimeException("Invalid JWE token", e);
         }
     }
 
