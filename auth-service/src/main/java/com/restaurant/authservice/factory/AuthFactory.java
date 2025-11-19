@@ -7,6 +7,7 @@ import com.restaurant.authservice.repository.AuthRepository;
 import com.restaurant.data.model.IFilter;
 import com.restaurant.factorymodule.BaseCrudFactory;
 import com.restaurant.factorymodule.exception.DataFactoryException;
+import com.restaurant.redismodule.exception.CacheException;
 import com.restaurant.redismodule.factory.CacheConfigFactory;
 import com.restaurant.redismodule.service.ICacheService;
 import com.restaurant.redismodule.service.RedisService;
@@ -104,6 +105,22 @@ public class AuthFactory extends BaseCrudFactory<Long, AuthDto, Long, AuthEntity
             }
         }
         throw new DataFactoryException("Please provide id or filter with username/email");
+    }
+
+    @Override
+    public <F extends IFilter> AuthDto getModel(F filter) throws CacheException, DataFactoryException {
+        if (filter instanceof AuthFilter authFilter) {
+
+            if (authFilter.getEmail() != null) {
+                AuthEntity authEntity = crudRepository.findByEmail(authFilter.getEmail())
+                        .orElse(null);
+                if (authEntity != null) {
+                    Long id = authEntity.getId();
+                    return super.getModel(id, filter);
+                }
+            }
+        }
+        throw new DataFactoryException("Please provide filter with username/email");
     }
 
     @Override

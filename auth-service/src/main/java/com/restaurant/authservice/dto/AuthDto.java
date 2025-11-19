@@ -1,5 +1,7 @@
 package com.restaurant.authservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.restaurant.authservice.entity.AuthEntity;
 import com.restaurant.data.model.IBaseModel;
 import lombok.*;
@@ -16,6 +18,7 @@ public class AuthDto implements IBaseModel<Long> {
 
     private String email;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     private Boolean isActive;

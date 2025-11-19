@@ -24,7 +24,35 @@ spring:
         format_sql: true
         use_sql_comments: true
     open-in-view: false
-  
+  data:
+    redis:
+      mode: ${REDIS_MODE:STANDALONE}
+      database: 0
+      password: ${REDIS_PASSWORD:}
+      timeout: 60s
+
+      # Standalone configuration (default for development)
+      standalone:
+        host: ${REDIS_HOST:localhost}
+        port: ${REDIS_PORT:6379}
+
+#      # Sentinel configuration (for production)
+#      sentinel:
+#        master: ${REDIS_SENTINEL_MASTER:mymaster}
+#        nodes: ${REDIS_SENTINEL_NODES:sentinel1:26379,sentinel2:26379,sentinel3:26379}
+#
+      # Cluster configuration (for high-scale production)
+      cluster:
+        nodes: ${REDIS_CLUSTER_NODES:node1:6379,node2:6379,node3:6379}
+        max-redirects: 3
+
+      # Connection pool
+      lettuce:
+        max-active: 16
+        max-idle: 8
+        min-idle: 2
+        max-wait: 3000ms
+        time-between-eviction-runs: 30s
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:

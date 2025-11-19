@@ -19,4 +19,6 @@ public class AuthFilter implements IFilter {
     private Boolean isActive;
 
     private AuthEntity.UserRole role;
+
+    private Long id;
 }

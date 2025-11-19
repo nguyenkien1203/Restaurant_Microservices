@@ -150,6 +150,10 @@ public class JwtServiceImpl implements JwtInternalService, JwtExternalService {
                     .build()
                     .parseSignedClaims(jws)
                     .getPayload();
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            // Don't log as error - expired tokens are normal
+            log.debug("JWT token has expired: {}", e.getMessage());
+            throw e; // Re-throw so caller can handle
         } catch (Exception e) {
             log.error("Failed to parse JWS token", e);
             throw new RuntimeException("Invalid or expired JWS token", e);
