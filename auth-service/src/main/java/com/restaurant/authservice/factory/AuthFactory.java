@@ -116,7 +116,10 @@ public class AuthFactory extends BaseCrudFactory<Long, AuthDto, Long, AuthEntity
                         .orElse(null);
                 if (authEntity != null) {
                     Long id = authEntity.getId();
-                    return super.getModel(id, filter);
+                    AuthDto savedModel = getModel(id, filter);
+                    return crudRepository.findById(savedModel.getId())
+                            .map(this::convertToModel)
+                            .orElse(null);
                 }
             }
         }
