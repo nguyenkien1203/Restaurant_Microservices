@@ -1,0 +1,82 @@
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=2
+        
+        - id: menu-service
+          uri: lb://menu-service
+          predicates:
+            - Path=/api/menu/**
+          filters:
+            - StripPrefix=2
+        
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - StripPrefix=2
+        
+        - id: profile-service
+          uri: lb://profile-service
+          predicates:
+            - Path=/api/profiles/**
+          filters:
+            - StripPrefix=2
+        
+        - id: reservation-service
+          uri: lb://reservation-service
+          predicates:
+            - Path=/api/reservations/**
+          filters:
+            - StripPrefix=2
+        
+        - id: table-service
+          uri: lb://table-service
+          predicates:
+            - Path=/api/tables/**
+          filters:
+            - StripPrefix=2
+      
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+      
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allow-credentials: false
+
+  # Kafka Consumer Group for API Gateway
+  kafka:
+    consumer:
+      group-id: api-gateway-group
+
+server:
+  port: 8080
+
+# Additional logging for API Gateway
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+

@@ -1,117 +1,13 @@
 spring:
   application:
     name: api-gateway
+  config:
+    import: optional:configserver:http://localhost:8888
   cloud:
-    gateway:
-      discovery:
-        locator:
-          enabled: true
-          lower-case-service-id: true
-      routes:
-        - id: auth-service
-          uri: lb://auth-service
-          predicates:
-            - Path=/api/auth/**
-          filters:
-            - StripPrefix=2
-        
-        - id: menu-service
-          uri: lb://menu-service
-          predicates:
-            - Path=/api/menu/**
-          filters:
-            - StripPrefix=2
-        
-        - id: order-service
-          uri: lb://order-service
-          predicates:
-            - Path=/api/orders/**
-          filters:
-            - StripPrefix=2
-        
-        - id: profile-service
-          uri: lb://profile-service
-          predicates:
-            - Path=/api/profiles/**
-          filters:
-            - StripPrefix=2
-        
-        - id: reservation-service
-          uri: lb://reservation-service
-          predicates:
-            - Path=/api/reservations/**
-          filters:
-            - StripPrefix=2
-        
-        - id: table-service
-          uri: lb://table-service
-          predicates:
-            - Path=/api/tables/**
-          filters:
-            - StripPrefix=2
-      
-      default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
-      
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOrigins: "*"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
-            allowedHeaders: "*"
-            allow-credentials: false
-  
-  data:
-    redis:
-      host: ${SPRING_DATA_REDIS_HOST:localhost}
-      port: ${SPRING_DATA_REDIS_PORT:6379}
-      timeout: 2000ms
-  
-  kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-    consumer:
-      group-id: api-gateway-group
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "*"
-
-server:
-  port: 8080
-
-eureka:
-  client:
-    service-url:
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    prefer-ip-address: true
-    lease-renewal-interval-in-seconds: 10
-    lease-expiration-duration-in-seconds: 30
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,gateway
-  endpoint:
-    health:
-      show-details: always
-    gateway:
-      enabled: true
-
-logging:
-  level:
-    root: INFO
-    org.springframework.cloud.gateway: DEBUG
-    com.restaurant: DEBUG
-
+    config:
+      fail-fast: false
+      retry:
+        max-attempts: 6
+        initial-interval: 1000
+        multiplier: 1.1
+        max-interval: 2000

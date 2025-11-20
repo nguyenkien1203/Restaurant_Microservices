@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: profile-service
+
+  # PostgreSQL Configuration for Profile Service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/profile_service_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+  # Kafka Consumer Group for Profile Service
+  kafka:
+    consumer:
+      group-id: profile-service-group
+
+server:
+  port: 8084
+
