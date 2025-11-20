@@ -5,6 +5,7 @@ import com.restaurant.authservice.dto.AuthFilter;
 import com.restaurant.authservice.entity.AuthEntity;
 import com.restaurant.authservice.factory.AuthFactory;
 import com.restaurant.factorymodule.exception.DataFactoryException;
+import com.restaurant.kafkamodule.service.IBaseKafkaProducer;
 import com.restaurant.redismodule.exception.CacheException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,8 @@ public class AuthService {
    private final AuthFactory authFactory;
 
    private final PasswordEncoder passwordEncoder;
+
+
 
    public AuthDto register(AuthDto authDto) throws DataFactoryException {
        log.info("Registering new user with email: {}", authDto.getEmail());

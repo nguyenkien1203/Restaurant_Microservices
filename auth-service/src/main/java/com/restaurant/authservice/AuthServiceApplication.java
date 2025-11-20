@@ -8,7 +8,8 @@ import org.springframework.context.annotation.ComponentScan;
 @ComponentScan(basePackages = {
 	"com.restaurant.authservice",
 	"com.restaurant.redismodule",
-	"com.restaurant.factorymodule"
+	"com.restaurant.factorymodule",
+	"com.restaurant.kafkamodule"
 })
 public class AuthServiceApplication {
 
