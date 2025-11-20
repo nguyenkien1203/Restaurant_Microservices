@@ -1,6 +1,7 @@
 package com.restaurant.authservice.controller;
 
 import com.restaurant.authservice.dto.AuthDto;
+import com.restaurant.authservice.dto.AuthResponseDto;
 import com.restaurant.authservice.dto.LoginRequest;
 import com.restaurant.authservice.entity.AuthEntity;
 import com.restaurant.authservice.service.AuthService;
@@ -61,18 +62,17 @@ public class AuthController {
             ResponseCookie refreshCookie = cookieService.createRefreshTokenCookie(refreshToken);
 
             // 4. Send response with Set-Cookie headers
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Login successful");
-            response.put("user", Map.of(
-                    "id", authDto.getId(),
-                    "email", authDto.getEmail(),
-                    "role", authDto.getRole().name()
-            ));
+
+            AuthResponseDto authResponseDto = AuthResponseDto.builder()
+                    .email(authDto.getEmail())
+                    .role(authDto.getRole().name())
+                    .active(authDto.getIsActive())
+                    .build();
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                     .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                    .body(response);
+                    .body(authResponseDto);
                     
         } catch (DataFactoryException e) {
             log.error("Login failed: {}", e.getMessage());
@@ -179,15 +179,15 @@ public class AuthController {
             
             // Fetch user details from database
             AuthDto authDto = authService.getUserByEmail(email);
+
+
+            AuthResponseDto authResponseDto = AuthResponseDto.builder()
+                    .email(authDto.getEmail())
+                    .role(authDto.getRole().name())
+                    .active(authDto.getIsActive())
+                    .build();
             
-            // Return user info (without password)
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", authDto.getId());
-            response.put("email", authDto.getEmail());
-            response.put("role", authDto.getRole().name());
-            response.put("isActive", authDto.getIsActive());
-            
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(authResponseDto);
             
         } catch (Exception e) {
             log.error("Error fetching current user", e);
@@ -237,18 +237,17 @@ public class AuthController {
             ResponseCookie refreshCookie = cookieService.createRefreshTokenCookie(refreshToken);
 
             // 6. Send response with Set-Cookie headers
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Registration successful");
-            response.put("user", Map.of(
-                    "id", createdUser.getId(),
-                    "email", createdUser.getEmail(),
-                    "role", createdUser.getRole().name()
-            ));
+
+            AuthResponseDto authResponseDto = AuthResponseDto.builder()
+                    .email(createdUser.getEmail())
+                    .role(createdUser.getRole().name())
+                    .active(createdUser.getIsActive())
+                    .build();
 
             return ResponseEntity.status(HttpStatus.CREATED)
                     .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                     .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                    .body(response);
+                    .body(authResponseDto);
                     
         } catch (DataFactoryException e) {
             log.error("Registration failed: {}", e.getMessage());
