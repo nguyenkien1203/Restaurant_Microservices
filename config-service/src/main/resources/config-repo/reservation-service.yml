@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: reservation-service
+
+  # PostgreSQL Configuration for Reservation Service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/reservation_service_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+  # Kafka Consumer Group for Reservation Service
+  kafka:
+    consumer:
+      group-id: reservation-service-group
+
+server:
+  port: 8085
+

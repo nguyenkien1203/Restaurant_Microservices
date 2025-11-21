@@ -9,7 +9,6 @@ import io.lettuce.core.cluster.ClusterClientOptions;
 import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +26,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Configuration
-@EnableConfigurationProperties(RedisProperties.class)
 @ComponentScan(basePackages = "com.restaurant.redismodule")
 public class RedisConfig {
     

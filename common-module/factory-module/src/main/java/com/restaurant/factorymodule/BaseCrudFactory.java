@@ -16,12 +16,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public abstract class BaseCrudFactory<
-        I extends Serializable, //id model
-        M extends IBaseModel<I>,
-        K extends Serializable, //id entity
-        E extends IBaseEntity<K>,
-        R extends CrudRepository<E, K>> extends BaseDataFactory<I, M> {
+public abstract class BaseCrudFactory<I extends Serializable, //id model
+        M extends IBaseModel<I>, K extends Serializable, //id entity
+        E extends IBaseEntity<K>, R extends CrudRepository<E, K>> extends BaseDataFactory<I, M> {
 
     /**
      * The Crud repository.
@@ -107,21 +104,38 @@ public abstract class BaseCrudFactory<
     protected abstract E updateConvertToEntity(M model, E oldEntity);
 
     /**
-     * Post create.
+     * Post create - Cache the newly created model and clear list cache.
      *
      * @param model  the model
      * @param entity the entity
      */
     protected void postCreate(M model, E entity) {
+        try {
+            if (model != null && model.getId() != null) {
+                cachePutModel(model.getId(), model);
+            }
+            // Clear list cache as the collection has changed
+            clearCacheListModel();
+        } catch (Exception e) {
+            log.warn("Failed to cache after create. Error: {}", e.getMessage());
+        }
     }
 
     /**
-     * Post delete.
+     * Post delete - Clear cache for the deleted model and list cache.
      *
      * @param entity the entity
      */
     protected void postDelete(E entity) {
-        clearCacheModelByKey(entity.getId());
+        try {
+            if (entity != null && entity.getId() != null) {
+                clearCacheModelByKey(entity.getId());
+            }
+            // Clear list cache as the collection has changed
+            clearCacheListModel();
+        } catch (Exception e) {
+            log.warn("Failed to clear cache after delete. Error: {}", e.getMessage());
+        }
     }
 
     /**
@@ -134,7 +148,7 @@ public abstract class BaseCrudFactory<
     }
 
     /**
-     * Post update.
+     * Post update - Clear old cache, cache updated model, and clear list cache.
      *
      * @param model  the model
      * @param entity the entity
@@ -142,11 +156,20 @@ public abstract class BaseCrudFactory<
      */
     protected void postUpdate(M model, E entity) throws CacheException {
         try {
-            clearCacheModelByKey(entity.getId());
-            cachePutModel(entity.getId(), model);
+            if (model != null && model.getId() != null) {
+                // Clear old cache first
+                clearCacheModelByKey(model.getId());
+                // Cache the updated model
+                cachePutModel(model.getId(), model);
+            }
+            // Clear list cache as the data has changed
+            clearCacheListModel();
         } catch (CacheException ex) {
-            log.error("postUpdate is ex: ", ex);
+            log.error("Failed to update cache after update. Error: ", ex);
             throw ex;
+        } catch (Exception e) {
+            log.error("Unexpected error during cache update: ", e);
+            throw new CacheException("Cache update failed", e.getMessage());
         }
     }
 

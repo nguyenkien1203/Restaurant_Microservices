@@ -27,16 +27,19 @@ public abstract class BaseDataFactory<I extends Serializable, M extends IBaseMod
 
     @Override
     public M create(M model) {
+        // Flow: preCreate → aroundCreate → postCreate (in subclass)
         return aroundCreate(preCreate(model));
     }
 
     @Override
     public void delete(I id) throws DataFactoryException {
+        // Flow: preDelete → aroundDelete → postDelete (in subclass)
         aroundDelete(id, preDelete(id, null));
     }
 
     @Override
     public <F extends IFilter> void delete(F filter) throws DataFactoryException {
+        // Flow: preDelete → aroundDelete → postDelete (in subclass)
         aroundDelete(null, preDelete(null, filter));
     }
 
@@ -47,19 +50,28 @@ public abstract class BaseDataFactory<I extends Serializable, M extends IBaseMod
 
     @Override
     public <F extends IFilter> M getModel(I id, F filter) throws CacheException, DataFactoryException {
+        // Check cache first (Read operations cache at BaseDataFactory level)
         M model = null;
         if (id != null) {
             model = getCacheModel(id);
         }
         if (model != null) {
-            log.info("get from redis cache for key: {}", id);
+            log.info("Cache hit for key: {}", id);
             return model;
         }
-        log.info("get from database for key: {}", id);
+        
+        // Flow: preGetModel → aroundGetModel → postGetModel (in subclass)
+        log.info("Cache miss, fetching from database for key: {}", id);
         filter = preGetModel(id, filter);
         model = aroundGetModel(id, filter);
+        
+        // Cache the result after successful fetch
         if (id != null && model != null) {
-            cachePutModel(id, model);
+            try {
+                cachePutModel(id, model);
+            } catch (Exception e) {
+                log.warn("Failed to cache model. Error: {}", e.getMessage());
+            }
         }
         return model;
     }
@@ -76,18 +88,30 @@ public abstract class BaseDataFactory<I extends Serializable, M extends IBaseMod
 
     @Override
     public <F extends IFilter> M update(M model, F iFilter) throws CacheException, DataFactoryException {
+        // Flow: preUpdate → aroundUpdate → postUpdate (in subclass)
         return aroundUpdate(model, preUpdate(model, iFilter));
     }
 
     @Override
     public <F extends IFilter> List<M> getList(F iFilter) throws CacheException, DataFactoryException {
+        // Check cache first (Read operations cache at BaseDataFactory level)
         List<M> models = getCacheListModel(iFilter);
         if (!models.isEmpty()) {
+            log.debug("Cache hit for list with filter: {}", iFilter);
             return models;
         }
+        
+        // Flow: preGetList (optional) → aroundGetListModel → postGetList (optional)
+        log.debug("Cache miss, fetching list from database with filter: {}", iFilter);
         models = aroundGetListModel(iFilter);
-        if (models != null) {
-            cacheListModel(iFilter, models);
+        
+        // Cache the result after successful fetch
+        if (models != null && !models.isEmpty()) {
+            try {
+                cacheListModel(iFilter, models);
+            } catch (Exception e) {
+                log.warn("Failed to cache list. Error: {}", e.getMessage());
+            }
         }
         return models;
     }
@@ -199,5 +223,19 @@ public abstract class BaseDataFactory<I extends Serializable, M extends IBaseMod
         return NotFound.NOT_FOUND;
     }
 
+    /**
+     * Count total records.
+     *
+     * @return the count
+     */
+    public abstract Long count();
+
+    /**
+     * Check if record exists by id.
+     *
+     * @param id the id
+     * @return true if exists
+     * @throws DataFactoryException the data factory exception
+     */
     public abstract boolean exist(I id) throws DataFactoryException;
 }

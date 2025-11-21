@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: menu-service
+
+  # PostgreSQL Configuration for Menu Service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/menu_service_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+  # Kafka Consumer Group for Menu Service
+  kafka:
+    consumer:
+      group-id: menu-service-group
+
+server:
+  port: 8082
+

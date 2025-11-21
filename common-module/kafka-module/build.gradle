@@ -1,0 +1,15 @@
+description = 'Kafka Module - Kafka messaging and event streaming'
+
+dependencies {
+	// Spring Kafka
+	api 'org.springframework.kafka:spring-kafka'
+	api 'com.fasterxml.jackson.core:jackson-databind'
+	
+	// Internal modules
+	api project(':common-module:data')
+	api project(':common-module:utils')
+	
+	// Configuration processor
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+}
+

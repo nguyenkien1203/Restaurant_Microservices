@@ -5,6 +5,7 @@ import com.restaurant.redismodule.service.ICacheService;
 import com.restaurant.redismodule.service.RedisService;
 import com.restaurant.utils.MapperUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -14,11 +15,16 @@ import java.util.concurrent.TimeUnit;
 
 import static com.restaurant.utils.MapperUtil.log;
 
+@Service
 public class CacheService implements ICacheService {
 
-
-    public RedisService redisService;
+    private final RedisService redisService;
     private static final Duration DEFAULT_TTL = Duration.ofSeconds(60);
+
+    @Autowired
+    public CacheService(RedisService redisService) {
+        this.redisService = redisService;
+    }
 
     @Override
     public Object getCache(String key, Class type) throws CacheException {

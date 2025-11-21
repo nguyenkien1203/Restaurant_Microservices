@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: order-service
+
+  # PostgreSQL Configuration for Order Service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/order_service_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+  # Kafka Consumer Group for Order Service
+  kafka:
+    consumer:
+      group-id: order-service-group
+
+server:
+  port: 8083
+

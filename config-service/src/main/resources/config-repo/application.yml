@@ -1,0 +1,92 @@
+# Common configuration for all services
+# This configuration is shared across all microservices
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+    open-in-view: false
+
+  # Common PostgreSQL DataSource Configuration
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # Common Redis Configuration
+  data:
+    redis:
+      mode: ${REDIS_MODE:STANDALONE}
+      database: 0
+      password: ${REDIS_PASSWORD:}
+      timeout: 60s
+
+      # Standalone configuration (default for development)
+      standalone:
+        host: ${REDIS_HOST:localhost}
+        port: ${REDIS_PORT:6379}
+
+      # Cluster configuration (for high-scale production)
+      cluster:
+        nodes: ${REDIS_CLUSTER_NODES:node1:6379,node2:6379,node3:6379}
+        max-redirects: 3
+
+      # Connection pool
+      lettuce:
+        max-active: 16
+        max-idle: 8
+        min-idle: 2
+        max-wait: 3000ms
+        time-between-eviction-runs: 30s
+
+  # Common Kafka Configuration
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
+# Common Eureka Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+# Common Management Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Common Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.restaurant: DEBUG
+    org.hibernate.SQL: DEBUG
+
