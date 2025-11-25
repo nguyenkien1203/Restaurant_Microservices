@@ -4,68 +4,68 @@ spring:
 
   cloud:
     gateway:
-      discovery:
-        locator:
-          enabled: true
-          lower-case-service-id: true
-      routes:
-        - id: auth-service
-          uri: lb://auth-service
-          predicates:
-            - Path=/api/auth/**
-          filters:
-            - StripPrefix=2
-        
-        - id: menu-service
-          uri: lb://menu-service
-          predicates:
-            - Path=/api/menu/**
-          filters:
-            - StripPrefix=2
-        
-        - id: order-service
-          uri: lb://order-service
-          predicates:
-            - Path=/api/orders/**
-          filters:
-            - StripPrefix=2
-        
-        - id: profile-service
-          uri: lb://profile-service
-          predicates:
-            - Path=/api/profiles/**
-          filters:
-            - StripPrefix=2
-        
-        - id: reservation-service
-          uri: lb://reservation-service
-          predicates:
-            - Path=/api/reservations/**
-          filters:
-            - StripPrefix=2
-        
-        - id: table-service
-          uri: lb://table-service
-          predicates:
-            - Path=/api/tables/**
-          filters:
-            - StripPrefix=2
-      
-      default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
-      
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOrigins: "*"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
-            allowedHeaders: "*"
-            allow-credentials: false
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+          routes:
+            - id: auth-service
+              uri: lb://auth-service
+              predicates:
+                - Path=/api/auth/**
+            
+            - id: menu-service
+              uri: lb://menu-service
+              predicates:
+                - Path=/api/menu/**
+              filters:
+                - StripPrefix=2
+            
+            - id: order-service
+              uri: lb://order-service
+              predicates:
+                - Path=/api/orders/**
+              filters:
+                - StripPrefix=2
+            
+            - id: profile-service
+              uri: lb://profile-service
+              predicates:
+                - Path=/api/profiles/**
+              filters:
+                - StripPrefix=2
+            
+            - id: reservation-service
+              uri: lb://reservation-service
+              predicates:
+                - Path=/api/reservations/**
+              filters:
+                - StripPrefix=2
+            
+            - id: table-service
+              uri: lb://table-service
+              predicates:
+                - Path=/api/tables/**
+              filters:
+                - StripPrefix=2
+          
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+          
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins: "*"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders: "*"
+                allow-credentials: false
 
   # Kafka Consumer Group for API Gateway
   kafka:
@@ -80,3 +80,17 @@ logging:
   level:
     org.springframework.cloud.gateway: DEBUG
 
+jwt:
+  # Encryption private key for JWE decryption
+  enc:
+    private-key: ${JWT_ENC_PRIVATE_KEY:}
+
+  # Cookie configuration
+  cookie-name: auth_token              # Access token cookie
+  refresh-cookie-name: refresh_auth_token   # Refresh token cookie
+
+  # Public paths (no authentication required)
+  public-paths:
+    - /api/auth/**        # Includes login, register, refresh, logout
+    - /actuator/health
+    - /actuator/info

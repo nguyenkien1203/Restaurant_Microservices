@@ -82,9 +82,12 @@ subprojects {
 
     // Exclude unwanted dependencies
     configurations {
-        configureEach {
+        configureEach { config ->
             exclude group: 'commons-logging', module: 'commons-logging'
-            exclude group: 'org.springframework.boot', module: 'spring-boot-starter-webflux'
+            // Only exclude WebFlux for non-gateway projects (API Gateway needs WebFlux)
+            if (project.name != 'api-gateway') {
+                exclude group: 'org.springframework.boot', module: 'spring-boot-starter-webflux'
+            }
         }
     }
 
