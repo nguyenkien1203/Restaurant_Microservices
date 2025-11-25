@@ -3,6 +3,7 @@ package com.restaurant.authservice.controller;
 import com.restaurant.authservice.dto.AuthDto;
 import com.restaurant.authservice.dto.AuthResponseDto;
 import com.restaurant.authservice.dto.LoginRequest;
+import com.restaurant.authservice.dto.RegisterDto;
 import com.restaurant.authservice.entity.AuthEntity;
 import com.restaurant.authservice.event.LoginEvent;
 import com.restaurant.authservice.event.RegisterEvent;
@@ -42,7 +43,7 @@ public class AuthController {
 
     @Autowired
     private CookieService cookieService;
-    
+
     @Autowired
     private AuthService authService;
 
@@ -67,7 +68,7 @@ public class AuthController {
 
             // Generate access token (short-lived)
             String accessToken = jwtService.generateAccessToken(claims);
-            
+
             // Generate refresh token (long-lived)
             String refreshToken = jwtService.generateRefreshToken(claims);
 
@@ -77,15 +78,15 @@ public class AuthController {
 
             // 4. Publish login event to Kafka
             kafkaProducerService.publishUserLoginEvent(
-                LoginEvent.builder()
-                    .eventId(UUID.randomUUID().toString())
-                    .eventType("USER_LOGIN")
-                    .timestamp(LocalDateTime.now())
-                    .source(serviceName)
-                    .version("1.0")
-                    .id(authDto.getId())
-                    .email(authDto.getEmail())
-                    .build()
+                    LoginEvent.builder()
+                            .eventId(UUID.randomUUID().toString())
+                            .eventType("USER_LOGIN")
+                            .timestamp(LocalDateTime.now())
+                            .source(serviceName)
+                            .version("1.0")
+                            .id(authDto.getId())
+                            .email(authDto.getEmail())
+                            .build()
             );
 
             // 5. Send response with Set-Cookie headers
@@ -99,7 +100,7 @@ public class AuthController {
                     .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                     .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                     .body(authResponseDto);
-                    
+
         } catch (DataFactoryException e) {
             log.error("Login failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -116,40 +117,40 @@ public class AuthController {
         try {
             // 1. Get current user from security context
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.isAuthenticated() && 
-                !(auth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
-                
+            if (auth != null && auth.isAuthenticated() &&
+                    !(auth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
+
                 String email = auth.getName();
                 AuthDto user = authService.getUserByEmail(email);
-                
+
                 // 2. Publish logout event to Kafka
                 kafkaProducerService.publishUserLogoutEvent(
-                    UserLogoutEvent.builder()
-                        .eventId(UUID.randomUUID().toString())
-                        .eventType("USER_LOGOUT")
-                        .timestamp(LocalDateTime.now())
-                        .source(serviceName)
-                        .version("1.0")
-                        .userId(user.getId())
-                        .email(user.getEmail())
-                        .build()
+                        UserLogoutEvent.builder()
+                                .eventId(UUID.randomUUID().toString())
+                                .eventType("USER_LOGOUT")
+                                .timestamp(LocalDateTime.now())
+                                .source(serviceName)
+                                .version("1.0")
+                                .userId(user.getId())
+                                .email(user.getEmail())
+                                .build()
                 );
             }
         } catch (Exception e) {
             log.error("Error publishing logout event", e);
             // Don't fail the logout if Kafka publish fails
         }
-        
+
         // 3. Delete both access and refresh token cookies
         ResponseCookie accessCookie = cookieService.deleteAccessTokenCookie();
         ResponseCookie refreshCookie = cookieService.deleteRefreshTokenCookie();
-        
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(Map.of("message", "Logout successful"));
     }
-    
+
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(HttpServletRequest request) {
         try {
@@ -163,51 +164,51 @@ public class AuthController {
                     }
                 }
             }
-            
+
             if (refreshToken == null || refreshToken.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Refresh token not found"));
             }
-            
+
             // 2. Validate and parse refresh token
             if (!jwtService.validateRefreshToken(refreshToken)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Invalid or expired refresh token"));
             }
-            
+
             Claims claims = jwtService.parseJwePayload(refreshToken);
-            
+
             // 3. Extract user information from refresh token
             String email = claims.getSubject();
             Long userId = claims.get("userId", Long.class);
             String role = claims.get("role", String.class);
             Boolean isActive = claims.get("isActive", Boolean.class);
-            
+
             // 4. Generate new access token
             Map<String, Object> newClaims = new HashMap<>();
             newClaims.put("sub", email);
             newClaims.put("userId", userId);
             newClaims.put("role", role);
             newClaims.put("isActive", isActive);
-            
+
             String newAccessToken = jwtService.generateAccessToken(newClaims);
-            
+
             // 5. Publish token refreshed event to Kafka
             kafkaProducerService.publishTokenRefreshedEvent(
-                TokenRefreshEvent.builder()
-                    .eventId(UUID.randomUUID().toString())
-                    .eventType("TOKEN_REFRESHED")
-                    .timestamp(LocalDateTime.now())
-                    .source(serviceName)
-                    .version("1.0")
-                    .id(userId)
-                    .email(email)
-                    .build()
+                    TokenRefreshEvent.builder()
+                            .eventId(UUID.randomUUID().toString())
+                            .eventType("TOKEN_REFRESHED")
+                            .timestamp(LocalDateTime.now())
+                            .source(serviceName)
+                            .version("1.0")
+                            .id(userId)
+                            .email(email)
+                            .build()
             );
-            
+
             // 6. Create new access token cookie
             ResponseCookie accessCookie = cookieService.createAccessTokenCookie(newAccessToken);
-            
+
             // 7. Send response
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
@@ -219,7 +220,7 @@ public class AuthController {
                                     "role", role
                             )
                     ));
-                    
+
         } catch (Exception e) {
             log.error("Token refresh failed", e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -232,17 +233,17 @@ public class AuthController {
         try {
             // Get the authenticated user from SecurityContext (set by JwtCookieFilter)
             Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-            
-            if (authentication == null || !authentication.isAuthenticated() || 
-                authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken) {
+                    SecurityContextHolder.getContext().getAuthentication();
+
+            if (authentication == null || !authentication.isAuthenticated() ||
+                    authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "Not authenticated"));
             }
-            
+
             // The principal is the email (username) we set in JwtCookieFilter
             String email = authentication.getName();
-            
+
             // Fetch user details from database
             AuthDto authDto = authService.getUserByEmail(email);
 
@@ -252,9 +253,9 @@ public class AuthController {
                     .role(authDto.getRole().name())
                     .active(authDto.getIsActive())
                     .build();
-            
+
             return ResponseEntity.ok(authResponseDto);
-            
+
         } catch (Exception e) {
             log.error("Error fetching current user", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -263,7 +264,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody LoginRequest registerRequest) {
+    public ResponseEntity<?> register(@RequestBody RegisterDto registerRequest) {
         try {
             // 1. Validate input
             if (registerRequest.getEmail() == null || registerRequest.getEmail().isEmpty()) {
@@ -287,16 +288,19 @@ public class AuthController {
 
             // 4. Publish user registered event to Kafka
             kafkaProducerService.publishUserRegisteredEvent(
-                RegisterEvent.builder()
-                    .eventId(UUID.randomUUID().toString())
-                    .eventType("USER_REGISTERED")
-                    .timestamp(LocalDateTime.now())
-                    .source(serviceName)
-                    .version("1.0")
-                    .id(createdUser.getId())
-                    .email(createdUser.getEmail())
-                    .role(createdUser.getRole().name())
-                    .build()
+                    RegisterEvent.builder()
+                            .eventId(UUID.randomUUID().toString())
+                            .eventType("USER_REGISTERED")
+                            .timestamp(LocalDateTime.now())
+                            .source(serviceName)
+                            .version("1.0")
+                            .id(createdUser.getId())
+                            .email(createdUser.getEmail())
+                            .role(createdUser.getRole().name())
+                            .fullName(registerRequest.getFullName())
+                            .phone(registerRequest.getPhone())
+                            .address(registerRequest.getAddress())
+                            .build()
             );
 
             // 5. Generate JWT Tokens for auto-login after registration
@@ -308,7 +312,7 @@ public class AuthController {
 
             // Generate access token (short-lived)
             String accessToken = jwtService.generateAccessToken(claims);
-            
+
             // Generate refresh token (long-lived)
             String refreshToken = jwtService.generateRefreshToken(claims);
 
@@ -328,7 +332,7 @@ public class AuthController {
                     .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                     .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                     .body(authResponseDto);
-                    
+
         } catch (DataFactoryException e) {
             log.error("Registration failed: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

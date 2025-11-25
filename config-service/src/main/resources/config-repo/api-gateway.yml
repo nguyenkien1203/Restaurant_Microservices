@@ -20,36 +20,31 @@ spring:
               uri: lb://menu-service
               predicates:
                 - Path=/api/menu/**
-              filters:
-                - StripPrefix=2
+              
             
             - id: order-service
               uri: lb://order-service
               predicates:
                 - Path=/api/orders/**
-              filters:
-                - StripPrefix=2
+              
             
             - id: profile-service
               uri: lb://profile-service
               predicates:
                 - Path=/api/profiles/**
-              filters:
-                - StripPrefix=2
+              
             
             - id: reservation-service
               uri: lb://reservation-service
               predicates:
                 - Path=/api/reservations/**
-              filters:
-                - StripPrefix=2
+              
             
             - id: table-service
               uri: lb://table-service
               predicates:
                 - Path=/api/tables/**
-              filters:
-                - StripPrefix=2
+              
           
           default-filters:
             - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin

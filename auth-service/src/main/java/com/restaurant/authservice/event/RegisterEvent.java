@@ -20,5 +20,11 @@ public class RegisterEvent extends BaseEvent {
 
     private Long id;
 
+    private String fullName;
+
+    private String phone;
+
+    private String address;
+
 
 }

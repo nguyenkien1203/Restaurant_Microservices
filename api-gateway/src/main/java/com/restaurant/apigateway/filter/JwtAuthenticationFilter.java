@@ -64,9 +64,9 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             }
 
             // Extract user information from claims
-            String userId = claims.get("userId", String.class);
+            String userId = String.valueOf(claims.get("userId", Integer.class));
             String email = claims.get("email", String.class);
-            String roles = claims.get("roles", String.class); // Comma-separated roles
+            String roles = claims.get("role", String.class); // Comma-separated roles
 
             // Add user information to request headers for downstream services
             ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()

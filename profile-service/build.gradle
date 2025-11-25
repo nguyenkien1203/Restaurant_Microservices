@@ -6,14 +6,17 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 
 	api project(':common-module:data')
 	api project(':common-module:utils')
 	api project(':common-module:redis-module')
 	api project(':common-module:factory-module')
+	api project(':common-module:kafka-module')
 	
 	// Spring Cloud
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+	implementation 'org.springframework.cloud:spring-cloud-starter-config'
 	
 	// Messaging
 	implementation 'org.springframework.kafka:spring-kafka'
