@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan(basePackages = "com.restaurant.redismodule")
+@ComponentScan(basePackages = {"com.restaurant.redismodule", "com.restaurant.apigateway"})
 public class ApiGatewayApplication {
 
     public static void main(String[] args) {

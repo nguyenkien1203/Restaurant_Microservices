@@ -83,6 +83,7 @@ public class JwtKeyService {
                 // L3: Load from Config Server
                 keyStr = jwtProperties.getEnc().getPrivateKey();
                 if (keyStr == null || keyStr.isEmpty()) {
+                    log.error("Can not get cached encryption private key from config server");
                     throw new IllegalStateException("JWT_ENC_PRIVATE_KEY is not configured");
                 }
 

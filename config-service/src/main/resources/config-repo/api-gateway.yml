@@ -81,6 +81,8 @@ logging:
     org.springframework.cloud.gateway: DEBUG
 
 jwt:
+  sig:
+    public-key: ${JWT_SIG_PUBLIC_KEY:}
   # Encryption private key for JWE decryption
   enc:
     private-key: ${JWT_ENC_PRIVATE_KEY:}
