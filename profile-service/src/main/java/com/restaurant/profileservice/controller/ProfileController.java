@@ -4,13 +4,17 @@ import com.restaurant.factorymodule.exception.DataFactoryException;
 import com.restaurant.profileservice.dto.CreateProfileRequest;
 import com.restaurant.profileservice.dto.ProfileDto;
 import com.restaurant.profileservice.dto.UpdateProfileRequest;
+import com.restaurant.profileservice.event.DeleteProfileEvent;
 import com.restaurant.profileservice.filter.HeaderAuthenticationFilter;
 import com.restaurant.profileservice.filter.ProfileFilter;
+import com.restaurant.profileservice.service.ProfileProducerService;
 import com.restaurant.profileservice.service.ProfileService;
 import com.restaurant.redismodule.exception.CacheException;
 import jakarta.validation.Valid;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,13 +31,16 @@ public class ProfileController {
 
     private final ProfileService profileService;
 
+    @Autowired
+    private final ProfileProducerService profileProducerService;
+
     /**
      * Get current user's profile
      */
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ProfileDto> getMyProfile(
-            @AuthenticationPrincipal HeaderAuthenticationFilter.UserPrincipal principal) 
+            @AuthenticationPrincipal HeaderAuthenticationFilter.UserPrincipal principal)
             throws CacheException, DataFactoryException {
 
         Long userId = principal.getUserId();
@@ -83,7 +90,7 @@ public class ProfileController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProfileDto> getProfileById(@PathVariable Long id) 
+    public ResponseEntity<ProfileDto> getProfileById(@PathVariable Long id)
             throws CacheException, DataFactoryException {
 
         log.info("GET /profiles/{} - Admin access", id);
@@ -96,7 +103,7 @@ public class ProfileController {
      */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<ProfileDto>> getAllProfiles(ProfileFilter filter) 
+    public ResponseEntity<List<ProfileDto>> getAllProfiles(ProfileFilter filter)
             throws CacheException, DataFactoryException {
 
         log.info("GET /profiles - Admin access");
@@ -111,7 +118,7 @@ public class ProfileController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProfileDto> updateProfile(
             @PathVariable Long id,
-            @Valid @RequestBody UpdateProfileRequest request) 
+            @Valid @RequestBody UpdateProfileRequest request)
             throws CacheException, DataFactoryException {
 
         log.info("PUT /profiles/{} - Admin access", id);
@@ -124,7 +131,7 @@ public class ProfileController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteProfile(@PathVariable Long id) throws DataFactoryException {
+    public ResponseEntity<Void> deleteProfile(@PathVariable Long id) throws DataFactoryException, CacheException {
 
         log.info("DELETE /profiles/{} - Admin access", id);
         profileService.deleteProfile(id);
@@ -136,7 +143,7 @@ public class ProfileController {
      */
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProfileDto> getProfileByUserId(@PathVariable Long userId) 
+    public ResponseEntity<ProfileDto> getProfileByUserId(@PathVariable Long userId)
             throws CacheException, DataFactoryException {
 
         log.info("GET /profiles/user/{} - Admin access", userId);

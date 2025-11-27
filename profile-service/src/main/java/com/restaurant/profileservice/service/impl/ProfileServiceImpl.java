@@ -4,16 +4,22 @@ import com.restaurant.factorymodule.exception.DataFactoryException;
 import com.restaurant.profileservice.dto.CreateProfileRequest;
 import com.restaurant.profileservice.dto.ProfileDto;
 import com.restaurant.profileservice.dto.UpdateProfileRequest;
+import com.restaurant.profileservice.event.DeleteProfileEvent;
 import com.restaurant.profileservice.factory.ProfileFactory;
 import com.restaurant.profileservice.filter.ProfileFilter;
+import com.restaurant.profileservice.service.ProfileProducerService;
 import com.restaurant.profileservice.service.ProfileService;
 import com.restaurant.redismodule.exception.CacheException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -21,6 +27,12 @@ import java.util.List;
 public class ProfileServiceImpl implements ProfileService {
 
     private final ProfileFactory profileFactory;
+
+    @Autowired
+    private final ProfileProducerService profileProducerService;
+
+    @Value("${spring.application.name:profile-service}")
+    private String serviceName;
 
     @Override
     @Transactional
@@ -84,13 +96,24 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional
-    public void deleteProfile(Long id) throws DataFactoryException {
+    public void deleteProfile(Long id) throws DataFactoryException, CacheException {
+
+        Long userId = profileFactory.getModel(id).getUserId();
+
         log.info("Deleting profile with id: {}", id);
         if (!profileFactory.exists(id, null)) {
             log.error("Profile not found with id: {}", id);
             throw new DataFactoryException("Profile not found with id: " + id);
         }
         profileFactory.delete(id);
+        profileProducerService.publishDeleteProfileEvent(DeleteProfileEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .eventType("PROFILE_DELETE")
+                .timestamp(LocalDateTime.now())
+                .source(serviceName)
+                .version("1.0")
+                .userId(userId)
+                .build());
         log.info("Profile deleted: {}", id);
     }
 

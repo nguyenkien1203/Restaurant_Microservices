@@ -193,4 +193,17 @@ public class AuthService {
         return authDto;
     }
 
+    public void deleteAuthRecord(Long userId) throws DataFactoryException, CacheException {
+        log.info("Delete authentication record of user: {}", userId);
+
+        if(userId == null) {
+            throw new DataFactoryException("Userid is null");
+        }
+
+        if(!authFactory.exist(userId)){
+            throw new DataFactoryException("Record does not exist");
+        }
+        authFactory.delete(userId);
+    }
+
 }

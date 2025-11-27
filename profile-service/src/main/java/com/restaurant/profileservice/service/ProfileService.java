@@ -33,7 +33,7 @@ public interface ProfileService {
     /**
      * Delete profile by profile ID
      */
-    void deleteProfile(Long id) throws DataFactoryException;
+    void deleteProfile(Long id) throws DataFactoryException, CacheException;
 
     /**
      * Get all profiles with filtering (admin only)

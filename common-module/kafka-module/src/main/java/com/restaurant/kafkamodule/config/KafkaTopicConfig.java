@@ -27,6 +27,7 @@ public class KafkaTopicConfig {
     public static final String USER_LOGOUT_TOPIC = "user.logout";
     public static final String TOKEN_REFRESHED_TOPIC = "token.refreshed";
     public static final String PROFILE_UPDATED_TOPIC = "profile.updated";
+    public static final String PROFILE_DELETED_TOPIC = "profile.deleted";
     public static final String ORDER_CREATED_TOPIC = "order.created";
     public static final String ORDER_UPDATED_TOPIC = "order.updated";
     public static final String RESERVATION_CREATED_TOPIC = "reservation.created";
@@ -75,6 +76,15 @@ public class KafkaTopicConfig {
                 .replicas(defaultReplicas)
                 .build();
     }
+
+    @Bean
+    public NewTopic profileDeletedTopic() {
+        return TopicBuilder.name(PROFILE_DELETED_TOPIC)
+                .partitions(defaultPartitions)
+                .replicas(defaultReplicas)
+                .build();
+    }
+
 
     // Order Service Topics
     @Bean
