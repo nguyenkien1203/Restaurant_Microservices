@@ -40,11 +40,7 @@ public class KafkaConsumerConfig {
     @Value("${spring.kafka.consumer.max-poll-records:100}")
     private Integer maxPollRecords;
 
-    /**
-     * CHANGED: We now deserialize the Value as a String (Raw JSON).
-     * We let the MessageConverter (in the listener factory) handle the
-     * conversion to specific POJOs later.
-     */
+
     @Bean
     public ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> config = new HashMap<>();
@@ -56,8 +52,7 @@ public class KafkaConsumerConfig {
         // Key is String
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 
-        // CHANGED: Value is now String (wrapped in ErrorHandling)
-        // This prevents the "LinkedHashMap" issue because we pass raw JSON to the listener adapter
+
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, StringDeserializer.class.getName());
 
@@ -89,9 +84,7 @@ public class KafkaConsumerConfig {
         factory.setConsumerFactory(consumerFactory());
         factory.setConcurrency(3);
 
-        // --- NEW: Add the Message Converter ---
-        // This is the magic. It takes the String payload, looks at your
-        // @KafkaListener method signature (e.g. RegisterEvent), and uses Jackson to map it.
+
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule()); // Fixes the [2025, 11, 25...] array issue
         factory.setRecordMessageConverter(new StringJsonMessageConverter(mapper));
