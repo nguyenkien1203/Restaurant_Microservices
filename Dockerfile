@@ -20,7 +20,6 @@ COPY menu-service ./menu-service
 COPY order-service ./order-service
 COPY profile-service ./profile-service
 COPY reservation-service ./reservation-service
-COPY table-service ./table-service
 
 # Build argument to specify which service to build
 ARG SERVICE_NAME

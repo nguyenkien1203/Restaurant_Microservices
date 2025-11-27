@@ -243,32 +243,6 @@ services:
       - microservices-network
     restart: on-failure
 
-  # Table Service
-  table-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        SERVICE_NAME: table-service
-    container_name: table-service
-    ports:
-      - "8086:8086"
-    environment:
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/table_service_db
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
-      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-    depends_on:
-      eureka-server:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-    networks:
-      - microservices-network
-    restart: on-failure
-
 networks:
   microservices-network:
     driver: bridge
