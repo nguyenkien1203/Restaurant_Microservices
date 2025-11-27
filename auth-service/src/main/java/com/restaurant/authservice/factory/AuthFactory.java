@@ -44,6 +44,7 @@ public class AuthFactory extends BaseCrudFactory<Long, AuthDto, Long, AuthEntity
                 .build();
     }
 
+
     @Override
     protected AuthEntity createConvertToEntity(AuthDto model) {
 
@@ -160,6 +161,8 @@ public class AuthFactory extends BaseCrudFactory<Long, AuthDto, Long, AuthEntity
             default -> AuthEntity.UserRole.USER;
         };
     }
+
+
 
 }
 

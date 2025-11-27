@@ -130,7 +130,16 @@ public abstract class BaseDataFactory<I extends Serializable, M extends IBaseMod
     protected M preCreate(M model) {
         return model;
     }
-
+    /**
+     * Pre create m.
+     *
+     * @param id      the id
+     * @param iFilter the filter
+     * @return the m
+     */
+    protected M preCreate(I id, M iFilter) {
+        return iFilter;
+    }
     /**
      * Pre get model m.
      *

@@ -20,6 +20,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.time.Duration;
 import java.util.HashSet;
@@ -172,7 +174,9 @@ public class RedisConfig {
      */
     @Bean
     @ConditionalOnMissingBean(name = "redisTemplate")
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+    public RedisTemplate<String, Object> redisTemplate(
+            RedisConnectionFactory redisConnectionFactory,
+            ObjectMapper objectMapper) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(redisConnectionFactory);
         
@@ -182,7 +186,7 @@ public class RedisConfig {
         template.setHashKeySerializer(stringSerializer);
         
         // Use JSON serializer for values
-        GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
+        GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer(objectMapper);
         template.setValueSerializer(jsonSerializer);
         template.setHashValueSerializer(jsonSerializer);
         
@@ -196,7 +200,10 @@ public class RedisConfig {
     @Bean
     @ConditionalOnMissingBean(ObjectMapper.class)
     public ObjectMapper objectMapper() {
-        return new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return mapper;
     }
 }
 
