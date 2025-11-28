@@ -7,10 +7,13 @@ import com.restaurant.orderservice.dto.OrderDto;
 import com.restaurant.orderservice.dto.OrderItemDto;
 import com.restaurant.orderservice.entity.OrderEntity;
 import com.restaurant.orderservice.entity.OrderItemEntity;
+import com.restaurant.orderservice.filter.OrderFilter;
 import com.restaurant.orderservice.repository.OrderRepository;
+import com.restaurant.redismodule.exception.CacheException;
 import com.restaurant.redismodule.factory.CacheConfigFactory;
 import com.restaurant.redismodule.service.ICacheService;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.query.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -175,6 +178,71 @@ public class OrderFactory extends BaseCrudFactory<Long, OrderDto, Long, OrderEnt
 
     @Override
     protected <F extends IFilter> Optional<OrderEntity> getEntity(Long id, F filter) throws DataFactoryException {
-        return super.getEntity(id, filter);
+        Long orderId = id;
+        if(orderId == null && filter instanceof OrderFilter orderFilter){
+            orderId = orderFilter.getId();
+        }
+
+        return super.getEntity(orderId, filter);
+
     }
+
+    @Override
+    public <F extends IFilter> OrderDto getModel(Long id, F filter) throws CacheException, DataFactoryException {
+
+        Long orderId = id;
+
+        if(orderId == null && filter instanceof OrderFilter orderFilter){
+            orderId = orderFilter.getId();
+        }
+        return super.getModel(orderId, filter);
+    }
+
+    @Override
+    protected <F extends IFilter> Iterable<OrderEntity> getListEntity(F filter) throws DataFactoryException {
+        if (filter instanceof OrderFilter orderFilter) {
+            if (orderFilter.getUserId() != null) {
+                return crudRepository.findByUserIdOrderByCreatedAtDesc(orderFilter.getUserId());
+            }
+            if (orderFilter.getStatus() != null) {
+                return crudRepository.findByStatus(orderFilter.getStatus());
+            }
+            if (orderFilter.getDriverId() != null) {
+                return crudRepository.findByDriverIdAndStatusIn(
+                        orderFilter.getDriverId(),
+                        List.of(com.restaurant.orderservice.enums.OrderStatus.READY,
+                                com.restaurant.orderservice.enums.OrderStatus.OUT_FOR_DELIVERY)
+                );
+            }
+        }
+        return crudRepository.findAll();
+    }
+
+    @Override
+    public <F extends IFilter> boolean exists(Long id, F filter) throws DataFactoryException {
+        if (id != null) {
+            return crudRepository.existsById(id);
+        }
+
+        if (filter instanceof OrderFilter orderFilter && orderFilter.getUserId() != null) {
+            return crudRepository.existsByUserId(orderFilter.getUserId());
+        }
+
+        throw new DataFactoryException("Please provide id or filter");
+    }
+
+    // Custom methods
+    public List<OrderDto> getKitchenQueue() throws CacheException, DataFactoryException {
+        List<OrderEntity> entities = crudRepository.findKitchenQueue(
+                List.of(com.restaurant.orderservice.enums.OrderStatus.CONFIRMED,
+                        com.restaurant.orderservice.enums.OrderStatus.PREPARING)
+        );
+        return entities.stream().map(this::convertToModel).collect(Collectors.toList());
+    }
+
+    public List<OrderDto> getUnassignedDeliveryOrders() throws CacheException, DataFactoryException {
+        List<OrderEntity> entities = crudRepository.findUnassignedDeliveryOrders();
+        return entities.stream().map(this::convertToModel).collect(Collectors.toList());
+    }
+
 }
