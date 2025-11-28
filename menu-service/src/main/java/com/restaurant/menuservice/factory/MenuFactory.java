@@ -60,7 +60,7 @@ public class MenuFactory extends BaseCrudFactory<Long, MenuDto, Long, MenuEntity
 
     @Override
     protected MenuEntity updateConvertToEntity(MenuDto model, MenuEntity oldEntity) {
-        if(model == null || oldEntity == null){
+        if (model == null || oldEntity == null) {
             return oldEntity;
         }
         if (model.getName() != null) {
@@ -90,7 +90,6 @@ public class MenuFactory extends BaseCrudFactory<Long, MenuDto, Long, MenuEntity
         return oldEntity;
     }
 
-
     @Override
     public CacheConfigFactory<MenuDto> cacheFactory() {
         return new CacheConfigFactory<MenuDto>() {
@@ -101,12 +100,12 @@ public class MenuFactory extends BaseCrudFactory<Long, MenuDto, Long, MenuEntity
 
             @Override
             public Duration singleTtl() {
-                return Duration.ofMinutes(60);  // Cache single menu item for 60 minutes
+                return Duration.ofMinutes(60); // Cache single menu item for 60 minutes
             }
 
             @Override
             public Duration cacheListTtl() {
-                return Duration.ofMinutes(30);  // Cache list for 30 minutes
+                return Duration.ofMinutes(30); // Cache list for 30 minutes
             }
         };
     }
@@ -125,8 +124,6 @@ public class MenuFactory extends BaseCrudFactory<Long, MenuDto, Long, MenuEntity
 
         throw new DataFactoryException("Please provide id or filter");
     }
-
-
 
     @Override
     public <F extends IFilter> boolean exists(Long id, F filter) throws DataFactoryException {

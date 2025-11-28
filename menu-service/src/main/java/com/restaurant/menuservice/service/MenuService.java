@@ -12,22 +12,22 @@ import java.util.List;
 public interface MenuService {
 
     /**
-     * Create a new menu 
+     * Create a new menu
      */
     MenuDto createMenu(CreateMenuRequest request) throws DataFactoryException;
 
     /**
-     * Get menu  by ID
+     * Get menu by ID
      */
     MenuDto getMenuById(Long id) throws CacheException, DataFactoryException;
 
     /**
-     * Update menu  by ID
+     * Update menu by ID
      */
     MenuDto updateMenu(Long id, UpdateMenuRequest request) throws DataFactoryException, CacheException;
 
     /**
-     * Delete menu  by ID
+     * Delete menu by ID
      */
     void deleteMenu(Long id) throws DataFactoryException;
 
@@ -42,7 +42,7 @@ public interface MenuService {
     List<MenuDto> getAvailableMenus(String category) throws CacheException, DataFactoryException;
 
     /**
-     * Toggle menu  availability
+     * Toggle menu availability
      */
     MenuDto toggleAvailability(Long id) throws DataFactoryException, CacheException;
 }

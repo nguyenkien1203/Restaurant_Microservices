@@ -98,8 +98,7 @@ public class MenuServiceImpl implements MenuService {
     @Transactional
     public void deleteMenu(Long id) throws DataFactoryException {
         log.info("Delete item with id: {}", id);
-         menuFactory.delete(id);
-
+        menuFactory.delete(id);
 
     }
 
