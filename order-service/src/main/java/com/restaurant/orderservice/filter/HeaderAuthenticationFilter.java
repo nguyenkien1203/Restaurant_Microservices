@@ -4,7 +4,11 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,9 +16,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.nio.file.attribute.UserPrincipal;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -22,36 +26,71 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String HEADER_USER_ID = "X-User-Id";
     private static final String HEADER_USER_EMAIL = "X-User-Email";
-    private static final String HEADER_USER_ROLE = "X-User-Role";
+    private static final String HEADER_USER_ROLES = "X-User-Roles";
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-
+        // Extract user info from headers
         String userId = request.getHeader(HEADER_USER_ID);
         String userEmail = request.getHeader(HEADER_USER_EMAIL);
-        String userRole = request.getHeader(HEADER_USER_ROLE);
+        String rolesHeader = request.getHeader(HEADER_USER_ROLES);
 
-        if (userId != null && userEmail != null && userRole != null) {
-            log.debug("Authenticated request - userId: {}, email: {}, role: {}", userId, userEmail, userRole);
+        if (userId != null && userEmail != null) {
+            // Parse roles from comma-separated header
+            List<SimpleGrantedAuthority> authorities = parseRoles(rolesHeader);
 
-            List<SimpleGrantedAuthority> authorities = Collections.singletonList(
-                    new SimpleGrantedAuthority("ROLE_" + userRole.toUpperCase())
+            // Create authentication token with user details
+            UserPrincipal principal = new UserPrincipal(
+                    Long.parseLong(userId),
+                    userEmail,
+                    authorities
             );
 
             UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userEmail, null, authorities);
+                    new UsernamePasswordAuthenticationToken(
+                            principal,
+                            null,
+                            authorities
+                    );
 
-            // Store userId in details for later use
-            authentication.setDetails(userId);
-
+            // Set authentication in SecurityContext
             SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            log.debug("Authenticated user: {} with roles: {}", userEmail, rolesHeader);
         }
 
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Parse roles from comma-separated string and convert to authorities
+     */
+    private List<SimpleGrantedAuthority> parseRoles(String rolesHeader) {
+        if (rolesHeader == null || rolesHeader.isEmpty()) {
+            return List.of();
+        }
 
+        return Arrays.stream(rolesHeader.split(","))
+                .map(String::trim)
+                .filter(role -> !role.isEmpty())
+                .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+    }
 
-
+    /**
+     * Custom principal to hold user information from headers
+     */
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    public static class UserPrincipal {
+        private final Long userId;
+        private final String email;
+        private final List<SimpleGrantedAuthority> authorities;
+    }
 }

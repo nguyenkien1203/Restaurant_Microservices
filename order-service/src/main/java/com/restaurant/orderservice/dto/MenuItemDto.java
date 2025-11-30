@@ -1,13 +1,16 @@
 package com.restaurant.orderservice.dto;
 
-import java.math.BigDecimal;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MenuItemDto {
 
     private Long id;
@@ -19,4 +22,6 @@ public class MenuItemDto {
     private Boolean isAvailable;
     private Integer preparationTime;
     private Integer calories;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

@@ -7,8 +7,10 @@ import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @ComponentScan(basePackages = {
+        "com.restaurant.orderservice",
         "com.restaurant.redismodule",
-        "com.restaurant.factorymodule"
+        "com.restaurant.factorymodule",
+        "com.restaurant.kafkamodule"
 })
 @EnableFeignClients
 public class OrderServiceApplication {
