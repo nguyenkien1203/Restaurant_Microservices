@@ -2,7 +2,9 @@ description = 'Order Service - Manages customer orders and transactions'
 
 dependencies {
 
-	
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+
 
 
 	// Internal modules
