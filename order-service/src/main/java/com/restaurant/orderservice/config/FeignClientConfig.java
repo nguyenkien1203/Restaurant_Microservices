@@ -79,14 +79,14 @@ public class FeignClientConfig {
                         log.info("Feign request - Using request headers: X-User-Id={}, X-User-Email={}, X-User-Roles={}", 
                                 userId, userEmail, userRoles != null ? userRoles : "USER");
                     } else {
-                        // Log what we found for debugging
-                        if (authentication != null) {
-                            log.warn("Feign request - Authentication exists but principal type is: {}, userId={}, userEmail={}", 
-                                    authentication.getPrincipal().getClass().getName(), userId, userEmail);
-                        } else {
-                            log.warn("Feign request - No authentication found in SecurityContext, userId={}, userEmail={}", 
-                                    userId, userEmail);
-                        }
+                        // No authentication found - use system identity for service-to-service calls
+                        // This handles guest orders where there's no user authentication
+                        template.header("X-User-Id", SYSTEM_USER_ID);
+                        template.header("X-User-Email", SYSTEM_USER_EMAIL);
+                        template.header("X-User-Roles", SYSTEM_USER_ROLE);
+                        
+                        log.debug("Feign request - No authentication found, using system identity: X-User-Id={}, X-User-Email={}, X-User-Roles={}", 
+                                SYSTEM_USER_ID, SYSTEM_USER_EMAIL, SYSTEM_USER_ROLE);
                     }
                 }
 

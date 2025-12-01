@@ -1,6 +1,7 @@
-package com.restaurant.menuservice.config;
+// SecurityConfig.java
+package com.restaurant.reservationservice.config;
 
-import com.restaurant.menuservice.filter.HeaderAuthenticationFilter;
+import com.restaurant.reservationservice.filter.HeaderAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -23,29 +24,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Disable CSRF since we're using stateless authentication via headers
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // Stateless session management
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // Authorization rules
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Allow health checks and actuator endpoints
+                        // Public endpoints
+                        .requestMatchers("/api/reservations/guest").permitAll()
+                        .requestMatchers("/api/reservations/availability").permitAll()
+                        .requestMatchers("/api/reservations/confirmation/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
-                        
-                        // Allow public access to view menu items (for guests and authenticated users)
-                        .requestMatchers("/api/menu/{id}", "/api/menu/available").permitAll()
-
-                        // All other requests need authentication
+                        // All other endpoints require authentication
                         .anyRequest().authenticated()
                 )
-
-                // Add custom filter to extract user info from headers
                 .addFilterBefore(headerAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 }
-
