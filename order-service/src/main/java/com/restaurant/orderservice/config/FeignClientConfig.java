@@ -1,6 +1,6 @@
 package com.restaurant.orderservice.config;
 
-import com.restaurant.orderservice.filter.HeaderAuthenticationFilter;
+import com.restaurant.securitymodule.model.UserPrincipal;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
@@ -26,20 +26,20 @@ public class FeignClientConfig {
     @Bean
     public RequestInterceptor requestInterceptor() {
         return (RequestTemplate template) -> {
-            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder
+                    .getRequestAttributes();
 
             if (attributes != null) {
                 // CASE 1: Real User Request
-                // Extract user info from SecurityContext (set by HeaderAuthenticationFilter)
+                // Extract user info from SecurityContext (set by security-module filters)
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-                if (authentication != null && authentication.getPrincipal() instanceof HeaderAuthenticationFilter.UserPrincipal) {
-                    HeaderAuthenticationFilter.UserPrincipal principal = 
-                        (HeaderAuthenticationFilter.UserPrincipal) authentication.getPrincipal();
+                if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal) {
+                    UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
 
                     String userId = String.valueOf(principal.getUserId());
-                    String userEmail = principal.getEmail() != null && !principal.getEmail().isEmpty() 
-                            ? principal.getEmail() 
+                    String userEmail = principal.getEmail() != null && !principal.getEmail().isEmpty()
+                            ? principal.getEmail()
                             : "user" + userId + "@system";
 
                     // Format roles as comma-separated string (remove ROLE_ prefix for header)
@@ -58,7 +58,7 @@ public class FeignClientConfig {
                     template.header("X-User-Email", userEmail);
                     template.header("X-User-Roles", roles);
 
-                    log.info("Feign request - Forwarding headers: X-User-Id={}, X-User-Email={}, X-User-Roles={}", 
+                    log.info("Feign request - Forwarding headers: X-User-Id={}, X-User-Email={}, X-User-Roles={}",
                             userId, userEmail, roles);
 
                 } else {
@@ -76,7 +76,8 @@ public class FeignClientConfig {
                         } else {
                             template.header("X-User-Roles", "USER");
                         }
-                        log.info("Feign request - Using request headers: X-User-Id={}, X-User-Email={}, X-User-Roles={}", 
+                        log.info(
+                                "Feign request - Using request headers: X-User-Id={}, X-User-Email={}, X-User-Roles={}",
                                 userId, userEmail, userRoles != null ? userRoles : "USER");
                     } else {
                         // No authentication found - use system identity for service-to-service calls
@@ -84,8 +85,9 @@ public class FeignClientConfig {
                         template.header("X-User-Id", SYSTEM_USER_ID);
                         template.header("X-User-Email", SYSTEM_USER_EMAIL);
                         template.header("X-User-Roles", SYSTEM_USER_ROLE);
-                        
-                        log.debug("Feign request - No authentication found, using system identity: X-User-Id={}, X-User-Email={}, X-User-Roles={}", 
+
+                        log.debug(
+                                "Feign request - No authentication found, using system identity: X-User-Id={}, X-User-Email={}, X-User-Roles={}",
                                 SYSTEM_USER_ID, SYSTEM_USER_EMAIL, SYSTEM_USER_ROLE);
                     }
                 }
@@ -99,7 +101,7 @@ public class FeignClientConfig {
                 template.header("X-User-Email", SYSTEM_USER_EMAIL);
                 template.header("X-User-Roles", SYSTEM_USER_ROLE);
 
-                log.debug("Feign request - Using system identity: X-User-Id={}, X-User-Email={}, X-User-Roles={}", 
+                log.debug("Feign request - Using system identity: X-User-Id={}, X-User-Email={}, X-User-Roles={}",
                         SYSTEM_USER_ID, SYSTEM_USER_EMAIL, SYSTEM_USER_ROLE);
 
                 // Note: You might need a "System Token" here for Authorization

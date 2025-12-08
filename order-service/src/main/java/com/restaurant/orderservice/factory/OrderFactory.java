@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 @Component
 public class OrderFactory extends BaseCrudFactory<Long, OrderDto, Long, OrderEntity, OrderRepository> {
 
-
     /**
      * Instantiates a new Base caching factory.
      *
@@ -37,13 +36,12 @@ public class OrderFactory extends BaseCrudFactory<Long, OrderDto, Long, OrderEnt
         super(iCacheService, crudRepository);
     }
 
-
     @Override
     protected OrderDto convertToModel(OrderEntity entity) {
         List<OrderItemDto> itemDtos = entity.getOrderItems() != null
                 ? entity.getOrderItems().stream()
-                .map(this::convertItemToDto)
-                .collect(Collectors.toList())
+                        .map(this::convertItemToDto)
+                        .collect(Collectors.toList())
                 : new ArrayList<>();
 
         return OrderDto.builder()
@@ -179,11 +177,13 @@ public class OrderFactory extends BaseCrudFactory<Long, OrderDto, Long, OrderEnt
     @Override
     protected <F extends IFilter> Optional<OrderEntity> getEntity(Long id, F filter) throws DataFactoryException {
         Long orderId = id;
-        if(orderId == null && filter instanceof OrderFilter orderFilter){
+        if (orderId == null && filter instanceof OrderFilter orderFilter) {
             orderId = orderFilter.getId();
         }
 
-        return super.getEntity(orderId, filter);
+        // Use JOIN FETCH query to eagerly load orderItems and avoid
+        // LazyInitializationException
+        return crudRepository.findByIdWithItems(orderId);
 
     }
 
@@ -192,7 +192,7 @@ public class OrderFactory extends BaseCrudFactory<Long, OrderDto, Long, OrderEnt
 
         Long orderId = id;
 
-        if(orderId == null && filter instanceof OrderFilter orderFilter){
+        if (orderId == null && filter instanceof OrderFilter orderFilter) {
             orderId = orderFilter.getId();
         }
         return super.getModel(orderId, filter);
@@ -211,8 +211,7 @@ public class OrderFactory extends BaseCrudFactory<Long, OrderDto, Long, OrderEnt
                 return crudRepository.findByDriverIdAndStatusIn(
                         orderFilter.getDriverId(),
                         List.of(com.restaurant.orderservice.enums.OrderStatus.READY,
-                                com.restaurant.orderservice.enums.OrderStatus.OUT_FOR_DELIVERY)
-                );
+                                com.restaurant.orderservice.enums.OrderStatus.OUT_FOR_DELIVERY));
             }
         }
         return crudRepository.findAll();
@@ -235,8 +234,7 @@ public class OrderFactory extends BaseCrudFactory<Long, OrderDto, Long, OrderEnt
     public List<OrderDto> getKitchenQueue() throws CacheException, DataFactoryException {
         List<OrderEntity> entities = crudRepository.findKitchenQueue(
                 List.of(com.restaurant.orderservice.enums.OrderStatus.CONFIRMED,
-                        com.restaurant.orderservice.enums.OrderStatus.PREPARING)
-        );
+                        com.restaurant.orderservice.enums.OrderStatus.PREPARING));
         return entities.stream().map(this::convertToModel).collect(Collectors.toList());
     }
 
@@ -244,7 +242,5 @@ public class OrderFactory extends BaseCrudFactory<Long, OrderDto, Long, OrderEnt
         List<OrderEntity> entities = crudRepository.findUnassignedDeliveryOrders();
         return entities.stream().map(this::convertToModel).collect(Collectors.toList());
     }
-
-
 
 }

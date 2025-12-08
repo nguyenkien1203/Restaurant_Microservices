@@ -9,7 +9,8 @@ import org.springframework.context.annotation.ComponentScans;
 @ComponentScan(basePackages = { "com.restaurant.menuservice",
 		"com.restaurant.redismodule",
 		"com.restaurant.kafkamodule",
-		"com.restaurant.factorymodule"})
+		"com.restaurant.factorymodule",
+		"com.restaurant.securitymodule" })
 public class MenuServiceApplication {
 
 	public static void main(String[] args) {

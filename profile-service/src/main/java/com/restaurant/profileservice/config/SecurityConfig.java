@@ -1,6 +1,6 @@
 package com.restaurant.profileservice.config;
 
-import com.restaurant.profileservice.filter.HeaderAuthenticationFilter;
+import com.restaurant.securitymodule.filter.BaseSecurityFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +14,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 /**
  * Security configuration for Profile Service
- * Uses headers forwarded from API Gateway for authentication/authorization
+ * Uses shared security-module for JWT authentication
  */
 @Configuration
 @EnableWebSecurity
@@ -22,31 +22,25 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final HeaderAuthenticationFilter headerAuthenticationFilter;
+        private final BaseSecurityFilter baseSecurityFilter;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                // Disable CSRF since we're using stateless authentication via headers
-                .csrf(AbstractHttpConfigurer::disable)
-                
-                // Stateless session management
-                .sessionManagement(session -> 
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                
-                // Authorization rules
-                .authorizeHttpRequests(auth -> auth
-                        // Allow health checks and actuator endpoints
-                        .requestMatchers("/actuator/**").permitAll()
-                        
-                        // All other requests need authentication
-                        .anyRequest().authenticated()
-                )
-                
-                // Add custom filter to extract user info from headers
-                .addFilterBefore(headerAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                // Disable CSRF since we're using stateless authentication
+                                .csrf(AbstractHttpConfigurer::disable)
 
-        return http.build();
-    }
+                                // Stateless session management
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                                // Allow all requests - BaseSecurityFilter handles authorization
+                                .authorizeHttpRequests(auth -> auth
+                                                .anyRequest().permitAll())
+
+                                // Add base security filter from security-module
+                                .addFilterBefore(baseSecurityFilter, UsernamePasswordAuthenticationFilter.class);
+
+                return http.build();
+        }
 }
-

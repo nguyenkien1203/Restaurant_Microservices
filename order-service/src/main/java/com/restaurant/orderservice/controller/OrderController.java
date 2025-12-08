@@ -2,7 +2,7 @@ package com.restaurant.orderservice.controller;
 
 import com.restaurant.factorymodule.exception.DataFactoryException;
 import com.restaurant.orderservice.dto.*;
-import com.restaurant.orderservice.filter.HeaderAuthenticationFilter;
+import com.restaurant.securitymodule.model.UserPrincipal;
 import com.restaurant.orderservice.service.OrderService;
 import com.restaurant.redismodule.exception.CacheException;
 import jakarta.validation.Valid;
@@ -240,9 +240,8 @@ public class OrderController {
     // ========== HELPER METHODS ==========
 
     private Long extractUserId(Authentication authentication) {
-        if (authentication != null && authentication.getPrincipal() instanceof HeaderAuthenticationFilter.UserPrincipal) {
-            HeaderAuthenticationFilter.UserPrincipal principal = 
-                (HeaderAuthenticationFilter.UserPrincipal) authentication.getPrincipal();
+        if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal) {
+            UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
             return principal.getUserId();
         }
         throw new IllegalStateException("User ID not found in authentication");

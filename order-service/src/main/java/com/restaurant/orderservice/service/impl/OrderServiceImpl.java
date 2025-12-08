@@ -95,12 +95,14 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDto getOrderById(Long id) throws CacheException, DataFactoryException {
         log.info("Getting order by id: {}", id);
         return orderFactory.getModel(id, null);
     }
 
     @Override
+    @Transactional
     public List<OrderDto> getMyOrders(Long userId, OrderFilter filter) throws CacheException, DataFactoryException {
         log.info("Getting orders for user: {}", userId);
 
@@ -112,6 +114,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDto updateOrder(Long id, UpdateOrderRequest request, Long userId) throws CacheException, DataFactoryException {
         log.info("Updating order: {} by user: {}", id, userId);
 
@@ -147,6 +150,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void cancelOrder(Long id, Long userId) throws CacheException, DataFactoryException {
         log.info("Cancelling order: {} by user: {}", id, userId);
 

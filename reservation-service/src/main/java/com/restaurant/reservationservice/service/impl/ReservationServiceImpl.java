@@ -124,12 +124,14 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    @Transactional
     public ReservationDto getReservationById(Long id) throws CacheException, DataFactoryException {
         log.info("Getting reservation by id: {}", id);
         return reservationFactory.getModel(id, null);
     }
 
     @Override
+    @Transactional
     public ReservationDto getByConfirmationCode(String code) throws CacheException, DataFactoryException {
         log.info("Getting reservation by confirmation code: {}", code);
         return reservationFactory.findByConfirmationCode(code);
@@ -164,11 +166,11 @@ public class ReservationServiceImpl implements ReservationService {
         TableDto availableTable = availabilityService.findBestTable(request.getReservationDate(), request.getStartTime(), request.getStartTime().plusMinutes(DEFAULT_DURATION_MINUTES), request.getPartySize());
 
         if(availableTable == null) {
-            log.info(String.valueOf(availableTable));
+
             throw new InvalidReservationTimeException("The time slot has been occupied");
         }
-
         else {
+            log.info(String.valueOf(availableTable));
             // Update fields
             if (request.getReservationDate() != null) {
                 existing.setReservationDate(request.getReservationDate());
@@ -221,18 +223,21 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    @Transactional
     public List<ReservationDto> getAllReservations(ReservationFilter filter) throws CacheException, DataFactoryException {
         log.info("Getting all reservations with filter");
         return reservationFactory.getList(filter);
     }
 
     @Override
+    @Transactional
     public List<ReservationDto> getTodayReservations() {
         log.info("Getting today's reservations");
         return reservationFactory.getTodayReservations();
     }
 
     @Override
+    @Transactional
     public List<ReservationDto> getUpcomingReservations() {
         log.info("Getting upcoming reservations");
         return reservationFactory.getUpcomingReservations();

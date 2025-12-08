@@ -7,6 +7,8 @@ include('common-module:factory-module')
 include('common-module:data')
 include('common-module:utils')
 include('common-module:kafka-module')
+include('common-module:security-module')
+
 
 // Infrastructure services
 include('eureka-server')

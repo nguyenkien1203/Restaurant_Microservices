@@ -4,7 +4,7 @@ package com.restaurant.reservationservice.controller;
 import com.restaurant.factorymodule.exception.DataFactoryException;
 import com.restaurant.redismodule.exception.CacheException;
 import com.restaurant.reservationservice.dto.*;
-import com.restaurant.reservationservice.filter.HeaderAuthenticationFilter;
+import com.restaurant.securitymodule.model.UserPrincipal;
 import com.restaurant.reservationservice.filter.ReservationFilter;
 import com.restaurant.reservationservice.service.ReservationService;
 import jakarta.validation.Valid;
@@ -173,9 +173,8 @@ public class ReservationController {
     // ========== HELPER METHODS ==========
 
     private Long extractUserId(Authentication authentication) {
-        if (authentication != null && authentication.getPrincipal() instanceof HeaderAuthenticationFilter.UserPrincipal) {
-            HeaderAuthenticationFilter.UserPrincipal principal =
-                    (HeaderAuthenticationFilter.UserPrincipal) authentication.getPrincipal();
+        if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal) {
+            UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
             return principal.getUserId();
         }
         throw new IllegalStateException("User ID not found in authentication");

@@ -10,7 +10,8 @@ import org.springframework.context.annotation.ComponentScan;
         "com.restaurant.orderservice",
         "com.restaurant.redismodule",
         "com.restaurant.factorymodule",
-        "com.restaurant.kafkamodule"
+        "com.restaurant.kafkamodule",
+        "com.restaurant.securitymodule"
 })
 @EnableFeignClients
 public class OrderServiceApplication {

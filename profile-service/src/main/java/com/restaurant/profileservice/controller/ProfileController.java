@@ -5,7 +5,7 @@ import com.restaurant.profileservice.dto.CreateProfileRequest;
 import com.restaurant.profileservice.dto.ProfileDto;
 import com.restaurant.profileservice.dto.UpdateProfileRequest;
 import com.restaurant.profileservice.event.DeleteProfileEvent;
-import com.restaurant.profileservice.filter.HeaderAuthenticationFilter;
+import com.restaurant.securitymodule.model.UserPrincipal;
 import com.restaurant.profileservice.filter.ProfileFilter;
 import com.restaurant.profileservice.service.ProfileProducerService;
 import com.restaurant.profileservice.service.ProfileService;
@@ -40,7 +40,7 @@ public class ProfileController {
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ProfileDto> getMyProfile(
-            @AuthenticationPrincipal HeaderAuthenticationFilter.UserPrincipal principal)
+            @AuthenticationPrincipal UserPrincipal principal)
             throws CacheException, DataFactoryException {
 
         Long userId = principal.getUserId();
@@ -55,7 +55,7 @@ public class ProfileController {
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ProfileDto> createProfile(
-            @AuthenticationPrincipal HeaderAuthenticationFilter.UserPrincipal principal,
+            @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody CreateProfileRequest request) throws DataFactoryException {
 
         Long userId = principal.getUserId();
@@ -70,7 +70,7 @@ public class ProfileController {
     @PutMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ProfileDto> updateMyProfile(
-            @AuthenticationPrincipal HeaderAuthenticationFilter.UserPrincipal principal,
+            @AuthenticationPrincipal UserPrincipal principal,
             @Valid @RequestBody UpdateProfileRequest request) throws CacheException, DataFactoryException {
 
         Long userId = principal.getUserId();
