@@ -30,10 +30,17 @@ public class KafkaTopicConfig {
     public static final String PROFILE_DELETED_TOPIC = "profile.deleted";
     public static final String ORDER_CREATED_TOPIC = "order.created";
     public static final String ORDER_UPDATED_TOPIC = "order.updated";
+    public static final String ORDER_CANCELLED_TOPIC = "order.cancelled";
+    public static final String DELIVERY_ASSIGNED_TOPIC = "delivery.assigned";
+    public static final String DELIVERY_COMPLETED_TOPIC = "delivery.completed";
     public static final String RESERVATION_CREATED_TOPIC = "reservation.created";
     public static final String RESERVATION_UPDATED_TOPIC = "reservation.updated";
     public static final String MENU_UPDATED_TOPIC = "menu.updated";
     public static final String TABLE_UPDATED_TOPIC = "table.updated";
+    public static final String CUSTOMER_SEATED_TOPIC = "reservation.customer-seated";
+    public static final String RESERVATION_CANCELLED_TOPIC = "reservation.cancelled";
+    public static final String RESERVATION_COMPLETED_TOPIC = "reservation.completed";
+    public static final String PRE_ORDER_CREATED_TOPIC = "order.pre-order-created";
 
     // Auth Service Topics
     @Bean
@@ -85,7 +92,6 @@ public class KafkaTopicConfig {
                 .build();
     }
 
-
     // Order Service Topics
     @Bean
     public NewTopic orderCreatedTopic() {
@@ -98,6 +104,30 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic orderUpdatedTopic() {
         return TopicBuilder.name(ORDER_UPDATED_TOPIC)
+                .partitions(defaultPartitions)
+                .replicas(defaultReplicas)
+                .build();
+    }
+
+    @Bean
+    public NewTopic orderCancelledTopic() {
+        return TopicBuilder.name(ORDER_CANCELLED_TOPIC)
+                .partitions(defaultPartitions)
+                .replicas(defaultReplicas)
+                .build();
+    }
+
+    @Bean
+    public NewTopic deliveryAssignedTopic() {
+        return TopicBuilder.name(DELIVERY_ASSIGNED_TOPIC)
+                .partitions(defaultPartitions)
+                .replicas(defaultReplicas)
+                .build();
+    }
+
+    @Bean
+    public NewTopic deliveryCompletedTopic() {
+        return TopicBuilder.name(DELIVERY_COMPLETED_TOPIC)
                 .partitions(defaultPartitions)
                 .replicas(defaultReplicas)
                 .build();
@@ -137,5 +167,37 @@ public class KafkaTopicConfig {
                 .replicas(defaultReplicas)
                 .build();
     }
-}
 
+    // Reservation-Order Integration Topics
+    @Bean
+    public NewTopic customerSeatedTopic() {
+        return TopicBuilder.name(CUSTOMER_SEATED_TOPIC)
+                .partitions(defaultPartitions)
+                .replicas(defaultReplicas)
+                .build();
+    }
+
+    @Bean
+    public NewTopic reservationCancelledTopic() {
+        return TopicBuilder.name(RESERVATION_CANCELLED_TOPIC)
+                .partitions(defaultPartitions)
+                .replicas(defaultReplicas)
+                .build();
+    }
+
+    @Bean
+    public NewTopic reservationCompletedTopic() {
+        return TopicBuilder.name(RESERVATION_COMPLETED_TOPIC)
+                .partitions(defaultPartitions)
+                .replicas(defaultReplicas)
+                .build();
+    }
+
+    @Bean
+    public NewTopic preOrderCreatedTopic() {
+        return TopicBuilder.name(PRE_ORDER_CREATED_TOPIC)
+                .partitions(defaultPartitions)
+                .replicas(defaultReplicas)
+                .build();
+    }
+}

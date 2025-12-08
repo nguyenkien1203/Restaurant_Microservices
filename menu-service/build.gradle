@@ -1,7 +1,6 @@
 description = 'Menu Service - Manages restaurant menu items and categories'
 
 dependencies {
-	
 
 	// Internal modules
 	api project(':common-module:data')
@@ -9,8 +8,7 @@ dependencies {
 	api project(':common-module:redis-module')
 	api project(':common-module:factory-module')
 	api project(':common-module:kafka-module')
-
-	
-	// Internal modules
+	api project(':common-module:security-module')
 
 }
+

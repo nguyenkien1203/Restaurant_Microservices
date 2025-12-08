@@ -16,3 +16,20 @@ spring:
 server:
   port: 8082
 
+# Security configuration
+restaurant:
+  security:
+    default-type: JWT
+    jwt:
+      cookie-name: auth_token
+      enc:
+        private-key: ${JWT_ENC_PRIVATE_KEY:}
+      sig:
+        public-key: ${JWT_SIG_PUBLIC_KEY:}
+    endpoints:
+      - path: /actuator/**
+        type: PUBLIC
+      - path: /api/menu/{id}
+        type: PUBLIC
+      - path: /api/menu/available
+        type: PUBLIC

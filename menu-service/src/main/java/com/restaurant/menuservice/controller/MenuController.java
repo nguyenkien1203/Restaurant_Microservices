@@ -4,7 +4,6 @@ import com.restaurant.factorymodule.exception.DataFactoryException;
 import com.restaurant.menuservice.dtos.CreateMenuRequest;
 import com.restaurant.menuservice.dtos.MenuDto;
 import com.restaurant.menuservice.dtos.UpdateMenuRequest;
-import com.restaurant.menuservice.filter.MenuFilter;
 import com.restaurant.menuservice.service.MenuService;
 import com.restaurant.redismodule.exception.CacheException;
 import jakarta.validation.Valid;
@@ -25,8 +24,10 @@ public class MenuController {
 
     private final MenuService menuService;
 
+    /**
+     * Get available menu items (Public - for guests and authenticated users)
+     */
     @GetMapping("/available")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<MenuDto>> getAvailableMenus(
             @RequestParam(required = false) String category) throws CacheException, DataFactoryException {
 
@@ -35,15 +36,16 @@ public class MenuController {
         return ResponseEntity.ok(menus);
     }
 
+    /**
+     * Get menu item by ID (Public - for guests and authenticated users)
+     */
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<MenuDto> getMenuById(
-            @PathVariable Long id) throws CacheException, DataFactoryException{
-        log.info("Get /api/menu/id");
+            @PathVariable Long id) throws CacheException, DataFactoryException {
+        log.info("GET /api/menu/{}", id);
         MenuDto menuDto = menuService.getMenuById(id);
         return ResponseEntity.ok(menuDto);
     }
-
 
     // ========== ADMIN ENDPOINTS ==========
 
@@ -61,7 +63,7 @@ public class MenuController {
     }
 
     /**
-     * Create new menu  (Admin only)
+     * Create new menu (Admin only)
      */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -74,7 +76,7 @@ public class MenuController {
     }
 
     /**
-     * Update menu  (Admin only)
+     * Update menu (Admin only)
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -88,7 +90,7 @@ public class MenuController {
     }
 
     /**
-     * Delete menu  (Admin only)
+     * Delete menu (Admin only)
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -100,7 +102,7 @@ public class MenuController {
     }
 
     /**
-     * Toggle menu  availability (Admin only)
+     * Toggle menu availability (Admin only)
      */
     @PatchMapping("/{id}/toggle-availability")
     @PreAuthorize("hasRole('ADMIN')")
