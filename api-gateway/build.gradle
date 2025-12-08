@@ -1,5 +1,16 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version "$springBootVersion"
+    id 'io.spring.dependency-management' version "$springDependencyManagementVersion"
+}
 description = 'API Gateway - Routes and filters all incoming requests'
 
+// Exclude unwanted dependencies
+configurations {
+    configureEach {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-webflux'
+    }
+}
 dependencies {
     // Spring Cloud Gateway Server WebFlux (replaces deprecated spring-cloud-starter-gateway)
     implementation 'org.springframework.cloud:spring-cloud-starter-gateway-server-webflux'
@@ -16,13 +27,13 @@ dependencies {
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
-    
+
     // Monitoring
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    
+
     // Reactive Redis for rate limiting
     implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
-    
+
     // Messaging
     implementation 'org.springframework.kafka:spring-kafka'
 }

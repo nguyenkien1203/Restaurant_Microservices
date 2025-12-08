@@ -1,0 +1,10 @@
+dependencies {
+    api project(':common-module:filter-module:core')
+    api("org.springframework:spring-webmvc:$springFrameworkVersion")
+    api "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
+}
+jar {
+    enabled = true
+}

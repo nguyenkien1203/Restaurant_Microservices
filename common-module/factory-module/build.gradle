@@ -6,3 +6,7 @@ dependencies {
     api project(':common-module:data')
     api project(':common-module:redis-module')
 }
+
+jar {
+    enabled = true
+}
