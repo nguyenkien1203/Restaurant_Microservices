@@ -64,8 +64,6 @@ public class OrderServiceImpl implements OrderService {
         return createdOrder;
     }
 
-
-
     @Override
     public OrderDto createGuestOrder(CreateOrderRequest request) throws DataFactoryException {
         log.info("Create order with orderId");
@@ -115,7 +113,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderDto updateOrder(Long id, UpdateOrderRequest request, Long userId) throws CacheException, DataFactoryException {
+    public OrderDto updateOrder(Long id, UpdateOrderRequest request, Long userId)
+            throws CacheException, DataFactoryException {
         log.info("Updating order: {} by user: {}", id, userId);
 
         OrderDto existingOrder = orderFactory.getModel(id, null);
@@ -180,7 +179,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderDto updateOrderStatus(Long id, UpdateOrderStatusRequest request) throws CacheException, DataFactoryException {
+    public OrderDto updateOrderStatus(Long id, UpdateOrderStatusRequest request)
+            throws CacheException, DataFactoryException {
         log.info("Updating order status: {} to {}", id, request.getNewStatus());
 
         OrderDto order = orderFactory.getModel(id, null);
@@ -202,7 +202,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderDto assignDriver(Long orderId, AssignDriverRequest request) throws CacheException, DataFactoryException {
+    public OrderDto assignDriver(Long orderId, AssignDriverRequest request)
+            throws CacheException, DataFactoryException {
         log.info("Assigning driver {} to order {}", request.getDriverId(), orderId);
 
         OrderDto order = orderFactory.getModel(orderId, null);
@@ -291,16 +292,68 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderDto createPreOrder(Long reservationId, CreateOrderRequest request, Long userId) throws DataFactoryException {
+    public OrderDto createPreOrder(Long reservationId, CreateOrderRequest request, Long userId)
+            throws DataFactoryException {
         log.info("Creating pre-order for reservation: {} by user: {}", reservationId, userId);
 
         request.setOrderType(OrderType.PRE_ORDER);
         request.setReservationId(reservationId);
 
-        return createOrder(request, userId);
+        OrderDto createdOrder = createOrder(request, userId);
+
+        // Publish pre-order created event for reservation service
+        orderProducerService.publishPreOrderCreatedEvent(createdOrder);
+
+        return createdOrder;
     }
 
-    /* ==================HELPER METHOD ============================================ */
+    @Override
+    @Transactional
+    public void confirmPreOrder(Long orderId) throws CacheException, DataFactoryException {
+        log.info("Confirming pre-order: {} (triggered by CustomerSeatedEvent)", orderId);
+
+        OrderDto order = orderFactory.getModel(orderId, null);
+
+        // Only confirm if order is in PENDING status
+        if (order.getStatus() != OrderStatus.PENDING) {
+            log.warn("Pre-order {} is not in PENDING status (current: {}), skipping confirmation",
+                    orderId, order.getStatus());
+            return;
+        }
+
+        OrderStatus oldStatus = order.getStatus();
+        order.setStatus(OrderStatus.CONFIRMED);
+        order.setEstimatedReadyTime(LocalDateTime.now().plusMinutes(30));
+
+        OrderDto updatedOrder = orderFactory.update(order, null);
+        orderProducerService.publishOrderStatusChangedEvent(updatedOrder, oldStatus, OrderStatus.CONFIRMED);
+
+        log.info("Pre-order {} confirmed successfully", orderId);
+    }
+
+    @Override
+    @Transactional
+    public void cancelOrder(Long orderId, String reason) throws CacheException, DataFactoryException {
+        log.info("Cancelling order: {} with reason: {} (triggered by event)", orderId, reason);
+
+        OrderDto order = orderFactory.getModel(orderId, null);
+
+        // Can only cancel PENDING or CONFIRMED orders
+        if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.CONFIRMED) {
+            log.warn("Order {} cannot be cancelled (current status: {})", orderId, order.getStatus());
+            return;
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+        orderFactory.update(order, null);
+
+        orderProducerService.publishOrderCancelledEvent(order, reason);
+        log.info("Order {} cancelled successfully", orderId);
+    }
+
+    /*
+     * ==================HELPER METHOD ============================================
+     */
 
     private BigDecimal calculateTotal(List<OrderItemDto> orderItems) {
         return orderItems.stream()
@@ -308,23 +361,22 @@ public class OrderServiceImpl implements OrderService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private List<OrderItemDto> buildOrderItems(@NotEmpty(message = "Order must have at least one item") @Valid List<CreateOrderItemRequest> items) {
+    private List<OrderItemDto> buildOrderItems(
+            @NotEmpty(message = "Order must have at least one item") @Valid List<CreateOrderItemRequest> items) {
 
         List<OrderItemDto> orderItems = new ArrayList<>();
 
         for (CreateOrderItemRequest item : items) {
             try {
                 MenuItemDto menuItem = menuServiceClient.getMenuItemById(
-                        item.getMenuItemId()
-                );
+                        item.getMenuItemId());
                 if (menuItem == null) {
                     throw new MenuItemNotFoundException(item.getMenuItemId());
                 }
 
                 if (!Boolean.TRUE.equals(menuItem.getIsAvailable())) {
                     throw new DataFactoryException(
-                            "Menu item '" + menuItem.getName() + "' is currently unavailable"
-                    );
+                            "Menu item '" + menuItem.getName() + "' is currently unavailable");
                 }
                 // Build order item with actual menu data
                 BigDecimal subtotal = menuItem.getPrice()
@@ -346,15 +398,18 @@ public class OrderServiceImpl implements OrderService {
             } catch (Exception e) {
                 log.error("Error fetching menu item {}: {}", item.getMenuItemId(), e.getMessage());
                 throw new MenuServiceException(
-                        "Failed to fetch menu item details for ID: " + item.getMenuItemId(), e
-                );
+                        "Failed to fetch menu item details for ID: " + item.getMenuItemId(), e);
             }
         }
         return orderItems;
     }
 
-
     private void validateOrderRequest(CreateOrderRequest request) throws DataFactoryException {
+        // orderType is required for regular orders (pre-orders set it automatically)
+        if (request.getOrderType() == null) {
+            throw new DataFactoryException("Order type is required");
+        }
+
         if (request.getOrderType() == OrderType.DELIVERY &&
                 (request.getDeliveryAddress() == null || request.getDeliveryAddress().isBlank())) {
             throw new DataFactoryException("Delivery address is required for delivery orders");

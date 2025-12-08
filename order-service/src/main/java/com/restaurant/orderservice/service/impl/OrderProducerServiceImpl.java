@@ -39,6 +39,9 @@ public class OrderProducerServiceImpl implements OrderProducerService {
     @Value("${kafka.topic.delivery-completed:delivery-completed}")
     private String deliveryCompletedTopic;
 
+    @Value("${kafka.topic.pre-order-created:order.pre-order-created}")
+    private String preOrderCreatedTopic;
+
     @Override
     public void publishOrderCreatedEvent(OrderDto order) {
         try {
@@ -145,6 +148,29 @@ public class OrderProducerServiceImpl implements OrderProducerService {
             log.info("Published DELIVERY_COMPLETED event for order: {}", order.getId());
         } catch (Exception e) {
             log.error("Failed to publish DELIVERY_COMPLETED event for order: {}", order.getId(), e);
+        }
+    }
+
+    @Override
+    public void publishPreOrderCreatedEvent(OrderDto order) {
+        try {
+            PreOrderCreatedEvent event = PreOrderCreatedEvent.builder()
+                    .eventId(UUID.randomUUID().toString())
+                    .eventType("PRE_ORDER_CREATED")
+                    .timestamp(LocalDateTime.now())
+                    .source(serviceName)
+                    .version("1.0")
+                    .orderId(order.getId())
+                    .reservationId(order.getReservationId())
+                    .userId(order.getUserId())
+                    .totalAmount(order.getTotalAmount())
+                    .build();
+
+            kafkaProducerService.sendEvent(preOrderCreatedTopic, event);
+            log.info("Published PRE_ORDER_CREATED event for order: {} linked to reservation: {}",
+                    order.getId(), order.getReservationId());
+        } catch (Exception e) {
+            log.error("Failed to publish PRE_ORDER_CREATED event for order: {}", order.getId(), e);
         }
     }
 }

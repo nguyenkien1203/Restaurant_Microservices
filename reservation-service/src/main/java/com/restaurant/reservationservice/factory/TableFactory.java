@@ -7,19 +7,16 @@ import com.restaurant.factorymodule.exception.DataFactoryException;
 import com.restaurant.reservationservice.dto.TableDto;
 import com.restaurant.reservationservice.entity.TableEntity;
 import com.restaurant.reservationservice.enums.ReservationStatus;
+import com.restaurant.reservationservice.enums.TableStatus;
 import com.restaurant.reservationservice.repository.TableRepository;
 import com.restaurant.redismodule.factory.CacheConfigFactory;
 import com.restaurant.redismodule.service.ICacheService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
-import java.lang.reflect.Array;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -133,16 +130,20 @@ public class TableFactory extends BaseCrudFactory<Long, TableDto, Long, TableEnt
 
     // Custom methods
     public List<TableDto> getAvailableTables(LocalDate date, LocalTime startTime,
-                                             LocalTime endTime, Integer partySize) {
+            LocalTime endTime, Integer partySize) {
         List<TableEntity> tables;
 
-        List<ReservationStatus> excludedStatuses = Arrays.asList(
+        List<ReservationStatus> excludedReservationStatuses = Arrays.asList(
                 ReservationStatus.CANCELLED,
                 ReservationStatus.COMPLETED,
-                ReservationStatus.NO_SHOW
-        );
+                ReservationStatus.NO_SHOW);
 
-        tables = crudRepository.findAvailableTables(date, startTime, endTime, partySize, excludedStatuses);
+        List<TableStatus> excludedTableStatuses = Arrays.asList(
+                TableStatus.MAINTENANCE,
+                TableStatus.OCCUPIED);
+
+        tables = crudRepository.findAvailableTables(date, startTime, endTime, partySize,
+                excludedReservationStatuses, excludedTableStatuses);
 
         return tables.stream().map(this::convertToModel).collect(Collectors.toList());
     }

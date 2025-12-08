@@ -18,7 +18,8 @@ import java.util.List;
 @AllArgsConstructor
 public class CreateOrderRequest {
 
-    @NotNull(message = "Order type is required")
+    // Order type - auto-set to PRE_ORDER for createPreOrder endpoint, required for
+    // regular orders
     private OrderType orderType;
 
     @NotEmpty(message = "Order must have at least one item")
@@ -41,4 +42,3 @@ public class CreateOrderRequest {
     private String guestPhone;
     private String guestName;
 }
-

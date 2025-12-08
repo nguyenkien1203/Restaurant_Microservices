@@ -7,13 +7,12 @@ package com.restaurant.securitymodule.enums;
 public enum SecurityType {
     /**
      * Public endpoints - no authentication required
-     * Only rate limiting is applied
      */
     PUBLIC,
 
     /**
      * JWT authenticated endpoints - requires valid JWT token
-     * Rate limiting + JWT validation applied
+     *  JWT validation applied
      */
     JWT
 }

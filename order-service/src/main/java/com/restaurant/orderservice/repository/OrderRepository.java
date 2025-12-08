@@ -48,4 +48,8 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
     // Find delivery orders ready for pickup
     @Query("SELECT o FROM OrderEntity o WHERE o.orderType = 'DELIVERY' AND o.status = 'READY' AND o.driverId IS NULL")
     List<OrderEntity> findUnassignedDeliveryOrders();
+
+    // Find order by ID with items eagerly loaded
+    @Query("SELECT DISTINCT o FROM OrderEntity o LEFT JOIN FETCH o.orderItems WHERE o.id = :orderId")
+    java.util.Optional<OrderEntity> findByIdWithItems(@Param("orderId") Long orderId);
 }

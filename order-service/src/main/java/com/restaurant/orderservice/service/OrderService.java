@@ -87,4 +87,16 @@ public interface OrderService {
      * Create pre-order linked to reservation
      */
     OrderDto createPreOrder(Long reservationId, CreateOrderRequest request, Long userId) throws DataFactoryException;
+
+    // ========== EVENT HANDLING OPERATIONS ==========
+
+    /**
+     * Confirm pre-order when customer is seated (triggered by CustomerSeatedEvent)
+     */
+    void confirmPreOrder(Long orderId) throws CacheException, DataFactoryException;
+
+    /**
+     * Cancel order by orderId (triggered by ReservationCancelledEvent)
+     */
+    void cancelOrder(Long orderId, String reason) throws CacheException, DataFactoryException;
 }

@@ -4,13 +4,16 @@ import com.restaurant.factorymodule.exception.DataFactoryException;
 import com.restaurant.redismodule.exception.CacheException;
 import com.restaurant.reservationservice.dto.*;
 import com.restaurant.reservationservice.enums.ReservationStatus;
+import com.restaurant.reservationservice.enums.TableStatus;
 import com.restaurant.reservationservice.exception.InvalidReservationTimeException;
 import com.restaurant.reservationservice.exception.TableNotAvailableException;
 import com.restaurant.reservationservice.exception.UnauthorizedReservationAccessException;
 import com.restaurant.reservationservice.factory.ReservationFactory;
 import com.restaurant.reservationservice.filter.ReservationFilter;
 import com.restaurant.reservationservice.service.AvailabilityService;
+import com.restaurant.reservationservice.service.ReservationProducerService;
 import com.restaurant.reservationservice.service.ReservationService;
+import com.restaurant.reservationservice.service.TableService;
 import com.restaurant.reservationservice.utils.ConfirmationCodeGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +31,10 @@ public class ReservationServiceImpl implements ReservationService {
     // Default reservation duration in minutes
     private static final int DEFAULT_DURATION_MINUTES = 120;
     private final ReservationFactory reservationFactory;
-
-    //    private final ReservationProducerService producerService;
+    private final ReservationProducerService reservationProducerService;
     private final AvailabilityService availabilityService;
     private final ConfirmationCodeGenerator confirmationCodeGenerator;
+    private final TableService tableService;
 
     @Override
     @Transactional
@@ -47,8 +50,7 @@ public class ReservationServiceImpl implements ReservationService {
                 request.getReservationDate(),
                 request.getStartTime(),
                 endTime,
-                request.getPartySize()
-        );
+                request.getPartySize());
 
         if (table == null) {
             throw new TableNotAvailableException("No tables available for the requested time slot");
@@ -72,7 +74,7 @@ public class ReservationServiceImpl implements ReservationService {
         ReservationDto created = reservationFactory.create(reservation);
 
         // Publish event
-//        producerService.publishReservationCreatedEvent(created);
+        // producerService.publishReservationCreatedEvent(created);
 
         return created;
     }
@@ -91,8 +93,7 @@ public class ReservationServiceImpl implements ReservationService {
                 request.getReservationDate(),
                 request.getStartTime(),
                 endTime,
-                request.getPartySize()
-        );
+                request.getPartySize());
 
         if (table == null) {
             throw new TableNotAvailableException("No tables available for the requested time slot");
@@ -118,7 +119,7 @@ public class ReservationServiceImpl implements ReservationService {
         ReservationDto created = reservationFactory.create(reservation);
 
         // Publish event
-//        producerService.publishReservationCreatedEvent(created);
+        // producerService.publishReservationCreatedEvent(created);
 
         return created;
     }
@@ -147,7 +148,8 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @Transactional
-    public ReservationDto updateReservation(Long id, UpdateReservationRequest request, Long userId) throws CacheException, DataFactoryException {
+    public ReservationDto updateReservation(Long id, UpdateReservationRequest request, Long userId)
+            throws CacheException, DataFactoryException {
         log.info("Updating reservation: {} by user: {}", id, userId);
 
         ReservationDto existing = reservationFactory.getModel(id, null);
@@ -163,13 +165,14 @@ public class ReservationServiceImpl implements ReservationService {
             throw new DataFactoryException("Cannot update reservation with status: " + existing.getStatus());
         }
 
-        TableDto availableTable = availabilityService.findBestTable(request.getReservationDate(), request.getStartTime(), request.getStartTime().plusMinutes(DEFAULT_DURATION_MINUTES), request.getPartySize());
+        TableDto availableTable = availabilityService.findBestTable(request.getReservationDate(),
+                request.getStartTime(), request.getStartTime().plusMinutes(DEFAULT_DURATION_MINUTES),
+                request.getPartySize());
 
-        if(availableTable == null) {
+        if (availableTable == null) {
 
             throw new InvalidReservationTimeException("The time slot has been occupied");
-        }
-        else {
+        } else {
             log.info(String.valueOf(availableTable));
             // Update fields
             if (request.getReservationDate() != null) {
@@ -188,7 +191,6 @@ public class ReservationServiceImpl implements ReservationService {
 
             existing.setTable(availableTable);
         }
-
 
         return reservationFactory.update(existing, null);
     }
@@ -214,7 +216,12 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setStatus(ReservationStatus.CANCELLED);
         reservationFactory.update(reservation, null);
 
-//        producerService.publishReservationCancelledEvent(reservation);
+        // Note: We don't change table status here because canceling a future
+        // reservation
+        // doesn't affect the current physical state of the table
+
+        // Publish cancellation event for order service to cancel pre-orders
+        reservationProducerService.publishReservationCancelledEvent(reservation, "Cancelled by customer");
     }
 
     @Override
@@ -224,7 +231,8 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @Transactional
-    public List<ReservationDto> getAllReservations(ReservationFilter filter) throws CacheException, DataFactoryException {
+    public List<ReservationDto> getAllReservations(ReservationFilter filter)
+            throws CacheException, DataFactoryException {
         log.info("Getting all reservations with filter");
         return reservationFactory.getList(filter);
     }
@@ -245,7 +253,8 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @Transactional
-    public ReservationDto updateStatus(Long id, UpdateStatusRequest request) throws CacheException, DataFactoryException {
+    public ReservationDto updateStatus(Long id, UpdateStatusRequest request)
+            throws CacheException, DataFactoryException {
         log.info("Updating reservation {} status to {}", id, request.getNewStatus());
 
         ReservationDto reservation = reservationFactory.getModel(id, null);
@@ -256,19 +265,33 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setStatus(request.getNewStatus());
         ReservationDto updated = reservationFactory.update(reservation, null);
 
-        // Publish status change events
-//        if (request.getNewStatus() == ReservationStatus.CONFIRMED) {
-//            producerService.publishReservationConfirmedEvent(updated);
-//        } else if (request.getNewStatus() == ReservationStatus.SEATED) {
-//            producerService.publishCustomerSeatedEvent(updated);
-//        }
+        // Publish status change events for order service integration
+        // Only update table status for real-time physical state changes:
+        // - SEATED: customer physically arrives and sits down
+        // - COMPLETED: customer physically leaves the table
+        if (request.getNewStatus() == ReservationStatus.SEATED) {
+            reservationProducerService.publishCustomerSeatedEvent(updated);
+            if (updated.getTable() != null) {
+                tableService.updateTableStatus(updated.getTable().getId(), TableStatus.OCCUPIED);
+            }
+        } else if (request.getNewStatus() == ReservationStatus.COMPLETED) {
+            reservationProducerService.publishReservationCompletedEvent(updated);
+            if (updated.getTable() != null) {
+                tableService.updateTableStatus(updated.getTable().getId(), TableStatus.AVAILABLE);
+            }
+        } else if (request.getNewStatus() == ReservationStatus.CANCELLED) {
+            reservationProducerService.publishReservationCancelledEvent(updated, "Cancelled by admin");
+            // No table status change - canceling doesn't affect physical state
+        }
+        // NO_SHOW: No table status change needed - table was never occupied
 
         return updated;
     }
 
     @Override
     @Transactional
-    public ReservationDto assignTable(Long reservationId, AssignTableRequest request) throws CacheException, DataFactoryException {
+    public ReservationDto assignTable(Long reservationId, AssignTableRequest request)
+            throws CacheException, DataFactoryException {
         log.info("Assigning table {} to reservation {}", request.getTableId(), reservationId);
 
         ReservationDto reservation = reservationFactory.getModel(reservationId, null);
@@ -278,8 +301,7 @@ public class ReservationServiceImpl implements ReservationService {
                 request.getTableId(),
                 reservation.getReservationDate(),
                 reservation.getStartTime(),
-                reservation.getEndTime()
-        );
+                reservation.getEndTime());
 
         if (!available) {
             throw new TableNotAvailableException("Table is not available for the reservation time");
@@ -331,12 +353,14 @@ public class ReservationServiceImpl implements ReservationService {
         }
     }
 
-    private void validateStatusTransition(ReservationStatus current, ReservationStatus next) throws DataFactoryException {
+    private void validateStatusTransition(ReservationStatus current, ReservationStatus next)
+            throws DataFactoryException {
 
         boolean valid = switch (current) {
             case PENDING -> next == ReservationStatus.CONFIRMED || next == ReservationStatus.CANCELLED;
             case CONFIRMED ->
-                    next == ReservationStatus.SEATED || next == ReservationStatus.CANCELLED || next == ReservationStatus.NO_SHOW;
+                next == ReservationStatus.SEATED || next == ReservationStatus.CANCELLED
+                        || next == ReservationStatus.NO_SHOW;
             case SEATED -> next == ReservationStatus.COMPLETED;
             case COMPLETED, CANCELLED, NO_SHOW -> false;
         };

@@ -4,63 +4,56 @@ spring:
 
   cloud:
     gateway:
-      server:
-        webflux:
-          discovery:
-            locator:
-              enabled: true
-              lower-case-service-id: true
-          routes:
-            - id: auth-service
-              uri: lb://auth-service
-              predicates:
-                - Path=/api/auth/**
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+        
+        - id: menu-service
+          uri: lb://menu-service
+          predicates:
+            - Path=/api/menu/**
             
-            - id: menu-service
-              uri: lb://menu-service
-              predicates:
-                - Path=/api/menu/**
-              
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
             
-            - id: order-service
-              uri: lb://order-service
-              predicates:
-                - Path=/api/orders/**
-              
+        - id: profile-service
+          uri: lb://profile-service
+          predicates:
+            - Path=/api/profiles/**
             
-            - id: profile-service
-              uri: lb://profile-service
-              predicates:
-                - Path=/api/profiles/**
-              
+        - id: reservation-service
+          uri: lb://reservation-service
+          predicates:
+            - Path=/api/reservations/**
             
-            - id: reservation-service
-              uri: lb://reservation-service
-              predicates:
-                - Path=/api/reservations/**
-              
+        - id: table-service
+          uri: lb://reservation-service
+          predicates:
+            - Path=/api/tables/**
             
-            - id: table-service
-              uri: lb://table-service
-              predicates:
-                - Path=/api/tables/**
-              
-          
-          default-filters:
-            - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
-          
-          globalcors:
-            cors-configurations:
-              '[/**]':
-                allowedOrigins: "*"
-                allowedMethods:
-                  - GET
-                  - POST
-                  - PUT
-                  - DELETE
-                  - OPTIONS
-                allowedHeaders: "*"
-                allow-credentials: false
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+      
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allow-credentials: false
 
   # Kafka Consumer Group for API Gateway
   kafka:

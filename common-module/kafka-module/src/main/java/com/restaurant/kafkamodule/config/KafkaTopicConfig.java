@@ -37,6 +37,10 @@ public class KafkaTopicConfig {
     public static final String RESERVATION_UPDATED_TOPIC = "reservation.updated";
     public static final String MENU_UPDATED_TOPIC = "menu.updated";
     public static final String TABLE_UPDATED_TOPIC = "table.updated";
+    public static final String CUSTOMER_SEATED_TOPIC = "reservation.customer-seated";
+    public static final String RESERVATION_CANCELLED_TOPIC = "reservation.cancelled";
+    public static final String RESERVATION_COMPLETED_TOPIC = "reservation.completed";
+    public static final String PRE_ORDER_CREATED_TOPIC = "order.pre-order-created";
 
     // Auth Service Topics
     @Bean
@@ -87,7 +91,6 @@ public class KafkaTopicConfig {
                 .replicas(defaultReplicas)
                 .build();
     }
-
 
     // Order Service Topics
     @Bean
@@ -164,5 +167,37 @@ public class KafkaTopicConfig {
                 .replicas(defaultReplicas)
                 .build();
     }
-}
 
+    // Reservation-Order Integration Topics
+    @Bean
+    public NewTopic customerSeatedTopic() {
+        return TopicBuilder.name(CUSTOMER_SEATED_TOPIC)
+                .partitions(defaultPartitions)
+                .replicas(defaultReplicas)
+                .build();
+    }
+
+    @Bean
+    public NewTopic reservationCancelledTopic() {
+        return TopicBuilder.name(RESERVATION_CANCELLED_TOPIC)
+                .partitions(defaultPartitions)
+                .replicas(defaultReplicas)
+                .build();
+    }
+
+    @Bean
+    public NewTopic reservationCompletedTopic() {
+        return TopicBuilder.name(RESERVATION_COMPLETED_TOPIC)
+                .partitions(defaultPartitions)
+                .replicas(defaultReplicas)
+                .build();
+    }
+
+    @Bean
+    public NewTopic preOrderCreatedTopic() {
+        return TopicBuilder.name(PRE_ORDER_CREATED_TOPIC)
+                .partitions(defaultPartitions)
+                .replicas(defaultReplicas)
+                .build();
+    }
+}

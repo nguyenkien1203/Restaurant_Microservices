@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -97,10 +96,10 @@ public class TableServiceImpl implements TableService {
         return tableFactory.update(existing, null);
     }
 
-
-    /*  Implement soft delete (later)
-        publish kafka event to relevant consumer
-    * */
+    /*
+     * Implement soft delete (later)
+     * publish kafka event to relevant consumer
+     */
 
     @Override
     @Transactional
@@ -119,14 +118,18 @@ public class TableServiceImpl implements TableService {
     }
 
     @Override
-    public List<TableDto> getAvailableTablesForSlot(LocalDate date, LocalTime startTime, LocalTime endTime, Integer partySize) {
+    public List<TableDto> getAvailableTablesForSlot(LocalDate date, LocalTime startTime, LocalTime endTime,
+            Integer partySize) {
         log.info("Getting available tables for {} {}-{} size {}", date, startTime, endTime, partySize);
-        List<ReservationStatus> excludedStatuses = Arrays.asList(
+        List<ReservationStatus> excludedReservationStatuses = Arrays.asList(
                 ReservationStatus.CANCELLED,
                 ReservationStatus.COMPLETED,
-                ReservationStatus.NO_SHOW
-        );
-        List<TableEntity> entities = tableRepository.findAvailableTables(date, startTime, endTime, partySize, excludedStatuses);
+                ReservationStatus.NO_SHOW);
+        List<TableStatus> excludedTableStatuses = Arrays.asList(
+                TableStatus.OCCUPIED,
+                TableStatus.MAINTENANCE);
+        List<TableEntity> entities = tableRepository.findAvailableTables(date, startTime, endTime, partySize,
+                excludedReservationStatuses, excludedTableStatuses);
         return entities.stream()
                 .map(tableFactory::convertToModel) // if convertToModel is public; otherwise map manually
                 .collect(Collectors.toList());
