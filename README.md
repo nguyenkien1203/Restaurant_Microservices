@@ -118,7 +118,7 @@ A modern, production-ready microservices architecture for restaurant management 
 
 ```bash
 git clone <repository-url>
-cd VNPAY_Microservices
+cd Restaurant_Microservices
 ```
 
 ### 2. Start Infrastructure with Docker
