@@ -44,6 +44,10 @@ public class BucketRateLimitFilter extends BaseMvcFilter {
 
     @Override
     public void doFilter(FilterRequest request, FilterResponse response, MvcFilterChain chain) throws FilterException {
+        if (shouldNotFilter(request)) {
+            chain.doFilter(request, response);
+            return;
+        }
         log.info("start filter BucketRateLimitFilter");
         final Bucket tokenBucket = bucketRateLimiter.resolveBucket(
                 request.getHttpServletRequest().getRequestURI(),

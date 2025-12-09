@@ -34,6 +34,7 @@ public class JwtSecurityFilter extends BaseMvcFilter {
             return;
         }
 
+        //TODO đưa các logic này qua 1 chỗ khác để gọn code
         String token;
         if (Objects.nonNull(request.getHttpServletRequest().getCookies())) {
             log.debug("Total cookies received: {}", request.getHttpServletRequest().getCookies().length);
@@ -55,6 +56,8 @@ public class JwtSecurityFilter extends BaseMvcFilter {
             }
         }
         //TODO thêm logic xlý token
+
+        
         chain.doFilter(request, response);
     }
 

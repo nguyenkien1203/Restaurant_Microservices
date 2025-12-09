@@ -1,14 +1,13 @@
 package com.restaurant.data.properties;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.List;
-import java.util.Set;
-
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Primary;
+
+import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -54,20 +53,6 @@ public class SecurityProperties {
                     ", allowedHeaders=" + allowedHeaders +
                     '}';
         }
-    }
-
-    /**
-     * The type Rate limit.
-     */
-    @Getter
-    @Setter
-    public static class RateLimit {
-
-        @JsonProperty("limit-value")
-        private Long limitValue;
-
-        @JsonProperty("limit-time")
-        private Long limitTime;
     }
 
     /**

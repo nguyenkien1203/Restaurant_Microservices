@@ -1,4 +1,4 @@
-package com.restaurant.filter_module.core.cors;
+package com.restaurant.filter_module.core.default_filter.cors_filter;
 
 import com.restaurant.data.properties.SecurityProperties;
 import jakarta.servlet.ServletException;
@@ -33,10 +33,9 @@ public class CustomCorsFilter extends CorsFilter {
      *
      * @param request the request
      * @return the boolean
-     * @throws ServletException the servlet exception
      */
     @Override
-    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         return Objects.isNull(securityProperties.getCors());
     }
 }

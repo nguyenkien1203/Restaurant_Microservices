@@ -4,7 +4,7 @@ import com.restaurant.data.properties.SecurityProperties;
 import com.restaurant.filter_module.core.chain.IMvcFilterChainManager;
 import com.restaurant.filter_module.core.chain.MvcFilterChain;
 import com.restaurant.filter_module.core.chain.MvcFilterChainManager;
-import com.restaurant.filter_module.core.cors.CustomCorsFilter;
+import com.restaurant.filter_module.core.default_filter.cors_filter.CustomCorsFilter;
 import com.restaurant.filter_module.core.default_filter.public_filter.IPublicFilterChain;
 import com.restaurant.filter_module.core.default_filter.public_filter.PublicAuthorizationFilterChain;
 import com.restaurant.filter_module.core.default_filter.rate_limit.BucketRateLimitFilter;
@@ -37,7 +37,7 @@ import java.util.Objects;
 @Configuration
 @Slf4j
 @EnableConfigurationProperties(SecurityProperties.class)
-public class SecurityFilterConfig {
+public class SecurityCoreConfig {
     /**
      * Endpoint supporter un handle endpoint supporter.
      *

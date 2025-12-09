@@ -1,3 +1,7 @@
+common:
+  security:
+    business-endpoints:
+      - /api/**
 jwt:
   # Legacy HMAC secret (for backward compatibility with JwtUtils)
   secret: ${JWT_SECRET:JrqaDYf2smUIwjvb96nBvnNdeT3OQX1vf1N9CHJpfps=}
