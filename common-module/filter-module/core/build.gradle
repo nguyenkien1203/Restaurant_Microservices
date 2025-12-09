@@ -2,6 +2,7 @@ dependencies {
     // Spring Boot Starter
     implementation 'org.springframework.boot:spring-boot-starter'
     api("org.springframework:spring-webmvc:$springFrameworkVersion")
+    api "org.springframework.security:spring-security-core:$spring_security_core_version"
 
     api project(':common-module:data')
     api project(':common-module:redis-module')

@@ -45,6 +45,7 @@ ext {
     springBootVersion = '3.5.7'
     springCloudVersion = "2025.0.0"
     springFrameworkVersion = '6.2.11'
+    spring_security_core_version = '7.0.0'
 
     /**
      * JWT version

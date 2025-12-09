@@ -1,0 +1,26 @@
+spring:
+  data:
+    redis:
+      mode: ${REDIS_MODE:STANDALONE}
+      database: 0
+      password: ${REDIS_PASSWORD:}
+      timeout: 60s
+
+      # Standalone configuration (default for development)
+      standalone:
+        host: ${REDIS_HOST:localhost}
+        port: ${REDIS_PORT:6379}
+
+      # Cluster configuration (for high-scale production)
+      cluster:
+        nodes: ${REDIS_CLUSTER_NODES:node1:6379,node2:6379,node3:6379}
+        max-redirects: 3
+
+      # Connection pool
+      lettuce:
+        max-active: 16
+        max-idle: 8
+        min-idle: 2
+        max-wait: 3000ms
+        time-between-eviction-runs: 30s
+

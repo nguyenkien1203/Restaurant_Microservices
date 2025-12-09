@@ -1,14 +1,13 @@
 package com.restaurant.filter_module.jwt.filter;
 
 import com.restaurant.filter_module.core.chain.MvcFilterChain;
-import com.restaurant.filter_module.core.context.SecurityContext;
 import com.restaurant.filter_module.core.exception.FilterException;
 import com.restaurant.filter_module.core.filter.BaseMvcFilter;
 import com.restaurant.filter_module.core.filter.FilterRequest;
 import com.restaurant.filter_module.core.filter.FilterResponse;
+import com.restaurant.filter_module.jwt.properties.JwtSecurityPropertiesConfig;
 import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
@@ -21,23 +20,12 @@ import static com.restaurant.data.enums.FilterSecurityType.JWT_SECURITY_TYPE;
  */
 @Slf4j
 public class JwtSecurityFilter extends BaseMvcFilter {
+    private final JwtSecurityPropertiesConfig jwtSecurityPropertiesConfig;
 
-    @Value("${jwt.cookie-name:auth_token}")
-    private String cookieName;
-
-    @Value("${jwt.refresh-cookie-name:refresh_auth_token}")
-    private String refreshCookieName;
-
-    private final SecurityContext securityContext;
-
-    /**
-     * Instantiates a new Base vnpay one per business request filter.
-     *
-     * @param securityContext the security context
-     */
-    protected JwtSecurityFilter(SecurityContext securityContext) {
-        this.securityContext = securityContext;
+    public JwtSecurityFilter(JwtSecurityPropertiesConfig jwtSecurityPropertiesConfig) {
+        this.jwtSecurityPropertiesConfig = jwtSecurityPropertiesConfig;
     }
+
 
     @Override
     public void doFilter(FilterRequest request, FilterResponse response, MvcFilterChain chain) throws FilterException {
@@ -46,7 +34,7 @@ public class JwtSecurityFilter extends BaseMvcFilter {
             return;
         }
 
-        String token = null;
+        String token;
         if (Objects.nonNull(request.getHttpServletRequest().getCookies())) {
             log.debug("Total cookies received: {}", request.getHttpServletRequest().getCookies().length);
             for (Cookie cookie : request.getHttpServletRequest().getCookies()) {
@@ -54,16 +42,16 @@ public class JwtSecurityFilter extends BaseMvcFilter {
             }
 
             token = Arrays.stream(request.getHttpServletRequest().getCookies())
-                    .filter(c -> cookieName.equals(c.getName()))
+                    .filter(c -> jwtSecurityPropertiesConfig.getCookieName().equals(c.getName()))
                     .map(Cookie::getValue)
                     .findFirst()
                     .orElse(null);
 
             if (StringUtils.hasText(token)) {
-                log.debug("Found '{}' cookie with token length: {}", cookieName, token.length());
+                log.debug("Found '{}' cookie with token length: {}", jwtSecurityPropertiesConfig.getCookieName(), token.length());
                 log.debug("Token first 50 chars: {}", token.length() > 50 ? token.substring(0, 50) : token);
             } else {
-                log.debug("No '{}' cookie found", cookieName);
+                log.debug("No '{}' cookie found", jwtSecurityPropertiesConfig.getCookieName());
             }
         }
         //TODO thêm logic xlý token

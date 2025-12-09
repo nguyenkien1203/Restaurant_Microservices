@@ -4,7 +4,6 @@ import com.restaurant.data.properties.SecurityProperties;
 import com.restaurant.filter_module.core.chain.IMvcFilterChainManager;
 import com.restaurant.filter_module.core.chain.MvcFilterChain;
 import com.restaurant.filter_module.core.chain.MvcFilterChainManager;
-import com.restaurant.filter_module.core.context.SecurityContext;
 import com.restaurant.filter_module.core.cors.CustomCorsFilter;
 import com.restaurant.filter_module.core.default_filter.public_filter.IPublicFilterChain;
 import com.restaurant.filter_module.core.default_filter.public_filter.PublicAuthorizationFilterChain;
@@ -16,6 +15,7 @@ import com.restaurant.filter_module.core.endpoint.UnHandleEndpointSupporter;
 import com.restaurant.filter_module.core.exception.FilterException;
 import com.restaurant.filter_module.core.filter.DefaultOnePerRequestFilter;
 import com.restaurant.filter_module.core.filter.IOnePerRequestFilter;
+import com.restaurant.filter_module.core.default_filter.context_filter.SecurityContextFilter;
 import com.restaurant.utils.MapperUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -37,7 +37,7 @@ import java.util.Objects;
 @Configuration
 @Slf4j
 @EnableConfigurationProperties(SecurityProperties.class)
-public class FilterConfig {
+public class SecurityFilterConfig {
     /**
      * Endpoint supporter un handle endpoint supporter.
      *
@@ -46,7 +46,7 @@ public class FilterConfig {
      */
     @Bean
     @ConditionalOnMissingBean
-    public UnHandleEndpointSupporter iEndpointSupporter() throws FilterException {
+    public IEndpointSupporter iEndpointSupporter() throws FilterException {
         return new UnHandleEndpointSupporter();
     }
 
@@ -85,7 +85,6 @@ public class FilterConfig {
      * @param securityProperties     the security properties
      * @param iEndpointSupporter     the endpoint supporter
      * @param iMvcFilterChainManager the mvc filter chain manager
-     * @param securityContext        the security context
      * @return the one per request filter
      */
     @Bean
@@ -93,13 +92,11 @@ public class FilterConfig {
     @ConditionalOnMissingBean
     IOnePerRequestFilter onePerBusinessRequestFilter(SecurityProperties securityProperties,
                                                      IEndpointSupporter iEndpointSupporter,
-                                                     IMvcFilterChainManager iMvcFilterChainManager,
-                                                     SecurityContext securityContext) {
+                                                     IMvcFilterChainManager iMvcFilterChainManager) {
         return new DefaultOnePerRequestFilter(
                 securityProperties,
                 iEndpointSupporter,
-                iMvcFilterChainManager,
-                securityContext
+                iMvcFilterChainManager
         );
     }
 
@@ -112,8 +109,10 @@ public class FilterConfig {
     @Bean
     @ConditionalOnMissingBean
     IPublicFilterChain defaultPublicFilterChain(IBucketRateLimiter bucketRateLimiter) {
+        //có thể add thêm filter mặc định cho public ở đây mặc định sẽ duyệt theo thứ tự trong list
         return new PublicAuthorizationFilterChain(
                 List.of(
+                        new SecurityContextFilter(),
                         new BucketRateLimitFilter(bucketRateLimiter)
                 )
         );

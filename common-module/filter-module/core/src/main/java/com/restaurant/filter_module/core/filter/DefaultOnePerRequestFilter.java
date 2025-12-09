@@ -4,27 +4,28 @@ import com.restaurant.data.model.IEndpointModel;
 import com.restaurant.data.properties.SecurityProperties;
 import com.restaurant.filter_module.core.chain.IMvcFilterChainManager;
 import com.restaurant.filter_module.core.context.SecurityContext;
+import com.restaurant.filter_module.core.context.SecurityContextHolder;
 import com.restaurant.filter_module.core.endpoint.IEndpointSupporter;
 import com.restaurant.filter_module.core.exception.FilterException;
 import com.restaurant.filter_module.core.model.DefaultFilterRequest;
 import com.restaurant.filter_module.core.model.DefaultFilterResponse;
 import com.restaurant.filter_module.core.util.UriUtil;
+
+import java.time.LocalDateTime;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * The type Default one per request filter.
  */
-@Configuration
 @Slf4j
 public class DefaultOnePerRequestFilter extends BaseOnePerRequestFilter {
     private final IEndpointSupporter iEndpointSupporter;
     private final IMvcFilterChainManager iMvcFilterChainManager;
-    private final SecurityContext securityContext;
 
     /**
      * Instantiates a new Base vnpay one per business request filter.
@@ -33,12 +34,10 @@ public class DefaultOnePerRequestFilter extends BaseOnePerRequestFilter {
      */
     public DefaultOnePerRequestFilter(SecurityProperties securityProperties,
                                       IEndpointSupporter iEndpointSupporter,
-                                      IMvcFilterChainManager iMvcFilterChainManager,
-                                      SecurityContext securityContext) {
+                                      IMvcFilterChainManager iMvcFilterChainManager) {
         super(securityProperties);
         this.iEndpointSupporter = iEndpointSupporter;
         this.iMvcFilterChainManager = iMvcFilterChainManager;
-        this.securityContext = securityContext;
     }
 
     @Override
@@ -46,11 +45,11 @@ public class DefaultOnePerRequestFilter extends BaseOnePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) {
         try {
-            //set 1 số thông tin để dùng lại ở các logic sau.
-            securityContext.setStartTime(System.currentTimeMillis());
+            SecurityContext securityContext = SecurityContextHolder.getOrCreateContext();
+            securityContext.setRequestTime(LocalDateTime.now());
             //call DB lấy lên api đã config
             IEndpointModel iEndpointModel = iEndpointSupporter.getEndpoint(UriUtil.replaceQuery(request.getRequestURI()));
-            securityContext.setIEndpointModel(iEndpointModel);
+            securityContext.setEndpointModel(iEndpointModel);
 
             DefaultFilterRequest defaultFilterRequest = DefaultFilterRequest.builder()
                     .httpServletRequest(request)
@@ -66,6 +65,9 @@ public class DefaultOnePerRequestFilter extends BaseOnePerRequestFilter {
 
             HttpServletRequest httpServletRequest = defaultFilterRequest.getHttpServletRequest();
             HttpServletResponse httpServletResponse = defaultFilterResponse.getHttpServletResponse();
+
+            //set context để dùng trong các tầng dưới
+            SecurityContextHolder.setContext(securityContext);
             filterChain.doFilter(httpServletRequest, httpServletResponse);
 
             //có thể xử lý thêm các logic log time xử lý hay gì thì tùy.
