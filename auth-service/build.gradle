@@ -1,18 +1,27 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version "$springBootVersion"
+    id 'io.spring.dependency-management' version "$springDependencyManagementVersion"
+}
 description = 'Authentication Service - Handles user authentication and authorization'
 
 dependencies {
-	// Service-specific: Spring Security
-	api 'org.springframework.boot:spring-boot-starter-security'
+    // Internal modules
+    implementation project(':common-module:redis-module')
+    implementation project(':common-module:factory-module')
+    implementation project(':common-module:kafka-module')
+    implementation project(':common-module:filter-module:jwt')
+
+    /**
+     * Spring Boot Starters
+     */
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 	
-	// Service-specific: JWT for token-based authentication
-	api "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
-	runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
-	runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
-	
-	// Internal modules
-	api project(':common-module:redis-module')
-	api project(':common-module:factory-module')
-	api project(':common-module:kafka-module')
+
 
 	
 	// Testing

@@ -1,3 +1,9 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version "$springBootVersion"
+    id 'io.spring.dependency-management' version "$springDependencyManagementVersion"
+}
+
 description = 'Order Service - Manages customer orders and transactions'
 
 dependencies {
