@@ -1,13 +1,10 @@
 spring:
+  profiles:
+    active: dev
   application:
     name: auth-service
   config:
     import: optional:configserver:http://localhost:8888
   cloud:
     config:
-      fail-fast: false
-      retry:
-        max-attempts: 6
-        initial-interval: 1000
-        multiplier: 1.1
-        max-interval: 2000
+      name: auth-service, actuator-config, redis-config, database-config, eureka-config, kafka-config, security-config
