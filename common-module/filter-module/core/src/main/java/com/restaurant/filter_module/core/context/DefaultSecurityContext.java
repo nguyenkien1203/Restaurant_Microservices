@@ -5,6 +5,7 @@ import jakarta.servlet.http.Cookie;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.security.core.Authentication;
 
@@ -25,8 +26,14 @@ public class DefaultSecurityContext implements SecurityContext {
     private String requestId;
     private LocalDateTime requestTime;
     private IEndpointModel endpointModel;
+    private String authId;
     private Cookie[] cookies;
     private String responseCode;
     private String jwtToken;
     private String jwtRefreshToken;
+
+    private String userAgent;
+    private Long userId;
+    private String userEmail;
+    private List<String> roles;
 }

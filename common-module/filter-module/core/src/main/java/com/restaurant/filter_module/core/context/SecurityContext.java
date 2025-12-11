@@ -4,6 +4,7 @@ import com.restaurant.data.model.IEndpointModel;
 import jakarta.servlet.http.Cookie;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.security.core.Authentication;
 
@@ -144,6 +145,20 @@ public interface SecurityContext {
     void setJwtToken(String response);
 
     /**
+     * Gets auth id.
+     *
+     * @return the auth id
+     */
+    String getAuthId();  // Session ID from JWT
+
+    /**
+     * Sets auth id.
+     *
+     * @param authId the auth id
+     */
+    void setAuthId(String authId);
+
+    /**
      * Gets jwt refresh token.
      *
      * @return the jwt refresh token
@@ -158,4 +173,24 @@ public interface SecurityContext {
      * @param response the response
      */
     void setJwtRefreshToken(String response);
+
+    // NEW: Add these methods
+    String getUserAgent();
+
+    void setUserAgent(String userAgent);
+
+    Long getUserId();
+
+    void setUserId(Long userId);
+
+    String getUserEmail();
+
+    void setUserEmail(String email);
+
+
+    List<String> getRoles();
+
+    void setRoles(List<String> roles);
+
+
 }

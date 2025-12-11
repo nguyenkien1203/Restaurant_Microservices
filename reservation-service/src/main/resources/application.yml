@@ -5,6 +5,7 @@ spring:
     import: optional:configserver:http://localhost:8888
   cloud:
     config:
+      name: security-config
       fail-fast: false
       retry:
         max-attempts: 6

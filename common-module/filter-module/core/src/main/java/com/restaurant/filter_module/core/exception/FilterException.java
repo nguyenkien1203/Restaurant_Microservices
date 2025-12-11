@@ -29,4 +29,22 @@ public class FilterException extends Exception {
     this.iBaseErrorCode = null;
     this.message = message;
   }
+
+    /**
+     * Gets http status code.
+     *
+     * @return the http status code (default 500 if no error code)
+     */
+    public int getHttpStatusCode() {
+        return iBaseErrorCode != null ? iBaseErrorCode.getHttpStatusCode() : 500;
+    }
+
+    /**
+     * Gets error code string.
+     *
+     * @return the error code
+     */
+    public String getErrorCode() {
+        return iBaseErrorCode != null ? iBaseErrorCode.getErrorCode() : "UNKNOWN_ERROR";
+    }
 }
