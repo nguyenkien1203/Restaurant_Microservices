@@ -18,7 +18,6 @@ public class CustomCorsFilter extends CorsFilter {
     private final SecurityProperties securityProperties;
 
     /**
-     * Instantiates a new Vnpay cors filter.
      *
      * @param configSource       the config source
      * @param securityProperties the security properties

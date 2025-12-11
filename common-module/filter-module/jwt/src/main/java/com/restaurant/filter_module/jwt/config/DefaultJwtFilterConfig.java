@@ -6,6 +6,8 @@ import com.restaurant.filter_module.core.default_filter.rate_limit.IBucketRateLi
 import com.restaurant.filter_module.jwt.chain.JwtAuthorizationFilterChain;
 import com.restaurant.filter_module.jwt.filter.JwtSecurityFilter;
 import com.restaurant.filter_module.jwt.properties.JwtSecurityPropertiesConfig;
+import com.restaurant.filter_module.jwt.service.IJwtStatelessValidator;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -17,13 +19,16 @@ public class DefaultJwtFilterConfig {
 
     @Bean
     @ConditionalOnMissingBean
-    public JwtAuthorizationFilterChain jwtAuthorizationFilterChain(JwtSecurityPropertiesConfig jwtSecurityPropertiesConfig,
-                                                                   IBucketRateLimiter bucketRateLimiter) {
+    public JwtAuthorizationFilterChain jwtAuthorizationFilterChain(
+            JwtSecurityPropertiesConfig jwtConfig,
+            IBucketRateLimiter bucketRateLimiter,
+            IJwtStatelessValidator jwtStatelessValidator) {  // Changed from IJwtValidationService
+
         return new JwtAuthorizationFilterChain(
                 List.of(
                         new SecurityContextFilter(),
                         new BucketRateLimitFilter(bucketRateLimiter),
-                        new JwtSecurityFilter(jwtSecurityPropertiesConfig)
+                        new JwtSecurityFilter(jwtConfig, jwtStatelessValidator)  // Now passes 2 arguments
                 )
         );
     }

@@ -13,6 +13,10 @@ public enum FilterCoreErrorCode implements IBaseErrorCode {
      * Id is null factory response code.
      */
     TOO_MANY_REQUESTS("429", "ID_IS_NULL", HttpStatus.TOO_MANY_REQUESTS.value()),
+    AUTHENTICATION_REQUIRED("401", "AUTHENTICATION_REQUIRED", 401),
+    FORBIDDEN("403", "FORBIDDEN", 403),
+    INTERNAL_ERROR("500", "INTERNAL_ERROR", 500),
+    FILTER_NOT_CONFIGURED("500", "FILTER_NOT_CONFIGURED", 500);
     ;
     private final String errorCode;
     private final String messageCode;
