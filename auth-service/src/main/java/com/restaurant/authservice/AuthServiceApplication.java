@@ -9,7 +9,9 @@ import org.springframework.context.annotation.ComponentScan;
 	"com.restaurant.authservice",
 	"com.restaurant.redismodule",
 	"com.restaurant.factorymodule",
-	"com.restaurant.kafkamodule"
+	"com.restaurant.kafkamodule",
+	"com.restaurant.filter_module.core",
+	"com.restaurant.filter_module.jwt"
 })
 public class AuthServiceApplication {
 
