@@ -1,13 +1,3 @@
-plugins {
-    id 'java'
-    id 'org.springframework.boot' version "$springBootVersion"
-    id 'io.spring.dependency-management' version "$springDependencyManagementVersion"
-}
 description = 'Config Service - Centralized configuration management'
 
-dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter'
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.cloud:spring-cloud-config-server'
-
-}
+// All dependencies inherited from root build.gradle

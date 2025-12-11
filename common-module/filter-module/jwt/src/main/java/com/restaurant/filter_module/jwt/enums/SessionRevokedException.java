@@ -4,7 +4,7 @@ import com.restaurant.data.enums.IBaseErrorCode;
 
 public enum SessionRevokedException implements IBaseErrorCode {
 
-    SESSION_REVOKED_ERROR_CODE("431", "SESSION_REVOKED_ERROR_CODE", 401);
+    SESSION_REVOKED_ERROR_CODE("431", "SESSION_REVOKED_ERROR_CODE", 403);
     private final String errorCode;
     private final String messageCode;
     private final int httpStatusCode;

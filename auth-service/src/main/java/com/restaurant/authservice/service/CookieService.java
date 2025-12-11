@@ -56,4 +56,7 @@ public class CookieService {
         return "refresh_" + cookieName;
     }
 
+    public String getAccessTokenCookieName() {
+        return cookieName;
+    }
 }

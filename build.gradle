@@ -144,3 +144,100 @@ subprojects {
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
 }
+
+/**
+ * Service project categories
+ */
+ext {
+    allServiceProjects = [
+        'auth-service',
+        'api-gateway',
+        'menu-service',
+        'order-service',
+        'profile-service',
+        'reservation-service',
+        'eureka-server',
+        'config-service'
+    ]
+
+    businessServices = [
+        'auth-service',
+        'api-gateway',
+        'menu-service',
+        'order-service',
+        'profile-service',
+        'reservation-service'
+    ]
+
+    webMvcServices = [
+        'auth-service',
+        'menu-service',
+        'order-service',
+        'profile-service',
+        'reservation-service'
+    ]
+}
+
+/**
+ * Configure all subprojects based on their category
+ */
+subprojects { subproject ->
+    // Apply Spring Boot plugin to service projects (must be done during configuration phase)
+    if (subproject.name in rootProject.ext.allServiceProjects) {
+        apply plugin: 'org.springframework.boot'
+    }
+
+    // Use pluginManager to add dependencies after plugins are applied
+    pluginManager.withPlugin('org.springframework.boot') {
+        dependencies {
+            implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        }
+
+        // Eureka Server
+        if (subproject.name == 'eureka-server') {
+            dependencies {
+                implementation 'org.springframework.boot:spring-boot-starter-web'
+                implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
+            }
+        }
+
+        // Config Server
+        if (subproject.name == 'config-service') {
+            dependencies {
+                implementation 'org.springframework.boot:spring-boot-starter'
+                implementation 'org.springframework.cloud:spring-cloud-config-server'
+            }
+        }
+
+        // Business microservices (config client, eureka client, JWT)
+        if (subproject.name in rootProject.ext.businessServices) {
+            dependencies {
+                // Spring Cloud Config & Discovery
+                implementation 'org.springframework.cloud:spring-cloud-starter-config'
+                implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
+                // JWT
+                implementation "io.jsonwebtoken:jjwt-api:${rootProject.ext.jjwtVersion}"
+                runtimeOnly "io.jsonwebtoken:jjwt-impl:${rootProject.ext.jjwtVersion}"
+                runtimeOnly "io.jsonwebtoken:jjwt-jackson:${rootProject.ext.jjwtVersion}"
+            }
+        }
+
+        // Web MVC services (excludes api-gateway which uses WebFlux)
+        if (subproject.name in rootProject.ext.webMvcServices) {
+            dependencies {
+                // Spring Boot Web MVC Stack
+                implementation 'org.springframework.boot:spring-boot-starter-web'
+                implementation 'org.springframework.boot:spring-boot-starter-security'
+                implementation 'org.springframework.boot:spring-boot-starter-validation'
+                implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+                // Database - PostgreSQL
+                runtimeOnly 'org.postgresql:postgresql'
+
+                // Testing
+                testImplementation 'org.springframework.security:spring-security-test'
+            }
+        }
+    }
+}

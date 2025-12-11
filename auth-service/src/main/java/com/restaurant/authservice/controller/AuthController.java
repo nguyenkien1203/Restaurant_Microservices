@@ -1,270 +1,214 @@
 package com.restaurant.authservice.controller;
 
-import com.restaurant.authservice.dto.AuthDto;
-import com.restaurant.authservice.dto.AuthResponseDto;
-import com.restaurant.authservice.dto.LoginRequest;
-import com.restaurant.authservice.dto.RegisterDto;
+import com.restaurant.authservice.dto.*;
 import com.restaurant.authservice.service.AuthService;
 import com.restaurant.authservice.service.CookieService;
-import com.restaurant.authservice.service.impl.JwtServiceImpl;
-import com.restaurant.factorymodule.exception.DataFactoryException;
-import io.jsonwebtoken.Claims;
+import com.restaurant.filter_module.core.context.SecurityContext;
+import com.restaurant.filter_module.core.context.SecurityContextHolder;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    private JwtServiceImpl jwtService;
+    private final AuthService authService;
+    private final CookieService cookieService;
 
-    @Autowired
-    private CookieService cookieService;
+    // ==================== PUBLIC ENDPOINTS ====================
 
-    @Autowired
-    private AuthService authService;
-
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterDto request, HttpServletRequest httpRequest) {
         try {
-            // 1. Authenticate user via AuthService
-            AuthDto authDto = authService.login(loginRequest.getEmail(), loginRequest.getPassword());
-
-            // 2. Generate JWT Tokens with user claims
-            Map<String, Object> claims = new HashMap<>();
-            claims.put("sub", authDto.getEmail());
-            claims.put("userId", authDto.getId());
-            claims.put("role", authDto.getRole().name());
-            claims.put("isActive", authDto.getIsActive());
-
-            // Generate access token (short-lived)
-            String accessToken = jwtService.generateAccessToken(claims);
-
-            // Generate refresh token (long-lived)
-            String refreshToken = jwtService.generateRefreshToken(claims);
-
-            // 3. Create the Cookies
-            ResponseCookie accessCookie = cookieService.createAccessTokenCookie(accessToken);
-            ResponseCookie refreshCookie = cookieService.createRefreshTokenCookie(refreshToken);
-
-            // 4. Send response with Set-Cookie headers
-            AuthResponseDto authResponseDto = AuthResponseDto.builder()
-                    .email(authDto.getEmail())
-                    .role(authDto.getRole().name())
-                    .active(authDto.getIsActive())
-                    .build();
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                    .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                    .body(authResponseDto);
-
-        } catch (DataFactoryException e) {
-            log.error("Login failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid credentials", "message", e.getMessage()));
+            LoginResponse response = authService.register(
+                    request,
+                    httpRequest.getHeader("User-Agent"),
+                    getClientIP(httpRequest)
+            );
+            return buildLoginResponse(response, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return badRequest("Registration failed", e.getMessage());
         } catch (Exception e) {
-            log.error("Unexpected error during login", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Login failed", "message", "An unexpected error occurred"));
+            log.error("Registration error", e);
+            return serverError("Registration failed");
         }
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         try {
-            // 1. Get current user from security context
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.isAuthenticated() &&
-                    !(auth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
-
-                String email = auth.getName();
-                // 2. Call service to handle logout and publish event
-                authService.logout(email);
-            }
+            LoginResponse response = authService.login(
+                    request,
+                    httpRequest.getHeader("User-Agent"),
+                    getClientIP(httpRequest)
+            );
+            return buildLoginResponse(response, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return unauthorized("Login failed", e.getMessage());
         } catch (Exception e) {
-            log.error("Error publishing logout event", e);
-            // Don't fail the logout if Kafka publish fails
+            log.error("Login error", e);
+            return serverError("Login failed");
         }
-
-        // 3. Delete both access and refresh token cookies
-        ResponseCookie accessCookie = cookieService.deleteAccessTokenCookie();
-        ResponseCookie refreshCookie = cookieService.deleteRefreshTokenCookie();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(Map.of("message", "Logout successful"));
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(HttpServletRequest request) {
         try {
-            // 1. Extract refresh token from cookie
-            String refreshToken = null;
-            if (request.getCookies() != null) {
-                for (Cookie cookie : request.getCookies()) {
-                    if (cookieService.getRefreshTokenCookieName().equals(cookie.getName())) {
-                        refreshToken = cookie.getValue();
-                        break;
-                    }
-                }
+            String refreshToken = getCookieValue(request, cookieService.getRefreshTokenCookieName());
+            if (refreshToken == null) {
+                return unauthorized("Refresh token not found", null);
             }
 
-            if (refreshToken == null || refreshToken.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Refresh token not found"));
-            }
+            TokenRefreshResponse response = authService.refreshToken(refreshToken);
+            ResponseCookie accessCookie = cookieService.createAccessTokenCookie(response.getAccessToken());
 
-            // 2. Validate and parse refresh token
-            if (!jwtService.validateRefreshToken(refreshToken)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Invalid or expired refresh token"));
-            }
-
-            Claims claims = jwtService.parseJwePayload(refreshToken);
-
-            // 3. Extract user information from refresh token
-            String email = claims.getSubject();
-            Long userId = claims.get("userId", Long.class);
-            String role = claims.get("role", String.class);
-            Boolean isActive = claims.get("isActive", Boolean.class);
-
-            // 4. Generate new access token
-            Map<String, Object> newClaims = new HashMap<>();
-            newClaims.put("sub", email);
-            newClaims.put("userId", userId);
-            newClaims.put("role", role);
-            newClaims.put("isActive", isActive);
-
-            String newAccessToken = jwtService.generateAccessToken(newClaims);
-
-            // 5. Publish token refresh event via service
-            authService.publishTokenRefreshEvent(userId, email);
-
-            // 6. Create new access token cookie
-            ResponseCookie accessCookie = cookieService.createAccessTokenCookie(newAccessToken);
-
-            // 7. Send response
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                     .body(Map.of(
-                            "message", "Access token refreshed successfully",
+                            "message", "Token refreshed",
                             "user", Map.of(
-                                    "id", userId,
-                                    "email", email,
-                                    "role", role)));
-
+                                    "id", response.getUserId(),
+                                    "email", response.getEmail(),
+                                    "roles", response.getRoles()
+                            )
+                    ));
+        } catch (IllegalArgumentException e) {
+            return unauthorized("Token refresh failed", e.getMessage());
         } catch (Exception e) {
-            log.error("Token refresh failed", e);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Token refresh failed", "message", e.getMessage()));
+            log.error("Token refresh error", e);
+            return serverError("Token refresh failed");
         }
+    }
+
+    // ==================== PROTECTED ENDPOINTS ====================
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        try {
+            SecurityContext ctx = SecurityContextHolder.getContext();
+            authService.logout(ctx.getAuthId());
+        } catch (Exception e) {
+            log.error("Logout error", e);
+        }
+        return buildLogoutResponse();
+    }
+
+    @PostMapping("/logout-all")
+    public ResponseEntity<?> logoutAllSessions() {
+        try {
+            SecurityContext ctx = SecurityContextHolder.getContext();
+            authService.logoutAll(ctx.getUserId(), ctx.getUserEmail());
+        } catch (Exception e) {
+            log.error("Logout-all error", e);
+        }
+        return buildLogoutResponse();
     }
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         try {
-            // Get the authenticated user from SecurityContext (set by JwtCookieFilter)
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-            if (authentication == null || !authentication.isAuthenticated() ||
-                    authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Not authenticated"));
-            }
-
-            // The principal is the email (username) we set in JwtCookieFilter
-            String email = authentication.getName();
-
-            // Fetch user details from database
-            AuthDto authDto = authService.getUserByEmail(email);
-
-            AuthResponseDto authResponseDto = AuthResponseDto.builder()
-                    .email(authDto.getEmail())
-                    .role(authDto.getRole().name())
-                    .active(authDto.getIsActive())
-                    .build();
-
-            return ResponseEntity.ok(authResponseDto);
-
+            SecurityContext ctx = SecurityContextHolder.getContext();
+            AuthResponseDto response = authService.getCurrentUser(ctx.getUserEmail());
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return unauthorized(e.getMessage(), null);
         } catch (Exception e) {
-            log.error("Error fetching current user", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to fetch user information"));
+            log.error("Get current user error", e);
+            return serverError("Failed to fetch user");
         }
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterDto registerRequest) {
+    @GetMapping("/sessions")
+    public ResponseEntity<?> getActiveSessions() {
         try {
-            // 1. Validate input
-            if (registerRequest.getEmail() == null || registerRequest.getEmail().isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Email is required"));
-            }
-            if (registerRequest.getPassword() == null || registerRequest.getPassword().isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Password is required"));
-            }
+            SecurityContext ctx = SecurityContextHolder.getContext();
+            List<SessionDto> sessions = authService.getActiveSessionsByUserId(ctx.getUserId());
 
-            // 2. Register user via AuthService (handles registration and Kafka event
-            // publishing)
-            AuthDto createdUser = authService.register(registerRequest);
+            String currentAuthId = ctx.getAuthId();
+            List<Map<String, Object>> sessionList = sessions.stream()
+                    .map(s -> buildSessionMap(s, currentAuthId))
+                    .toList();
 
-            // 3. Generate JWT Tokens for auto-login after registration
-            Map<String, Object> claims = new HashMap<>();
-            claims.put("sub", createdUser.getEmail());
-            claims.put("userId", createdUser.getId());
-            claims.put("role", "USER"); // Default role for new registrations
-            claims.put("isActive", createdUser.getIsActive());
-
-            // Generate access token (short-lived)
-            String accessToken = jwtService.generateAccessToken(claims);
-
-            // Generate refresh token (long-lived)
-            String refreshToken = jwtService.generateRefreshToken(claims);
-
-            // 6. Create the Cookies
-            ResponseCookie accessCookie = cookieService.createAccessTokenCookie(accessToken);
-            ResponseCookie refreshCookie = cookieService.createRefreshTokenCookie(refreshToken);
-
-            // 7. Send response with Set-Cookie headers
-
-            AuthResponseDto authResponseDto = AuthResponseDto.builder()
-                    .email(createdUser.getEmail())
-                    .role(createdUser.getRole().name())
-                    .active(createdUser.getIsActive())
-                    .build();
-
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                    .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                    .body(authResponseDto);
-
-        } catch (DataFactoryException e) {
-            log.error("Registration failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "Registration failed", "message", e.getMessage()));
+            return ResponseEntity.ok(Map.of("sessions", sessionList, "count", sessions.size()));
         } catch (Exception e) {
-            log.error("Unexpected error during registration", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Registration failed", "message", "An unexpected error occurred"));
+            log.error("Get sessions error", e);
+            return serverError("Failed to fetch sessions");
         }
     }
 
+    // ==================== HELPER METHODS ====================
+
+    private ResponseEntity<?> buildLoginResponse(LoginResponse response, HttpStatus status) {
+        return ResponseEntity.status(status)
+                .header(HttpHeaders.SET_COOKIE, cookieService.createAccessTokenCookie(response.getAccessToken()).toString())
+                .header(HttpHeaders.SET_COOKIE, cookieService.createRefreshTokenCookie(response.getRefreshToken()).toString())
+                .body(response.getUser());
+    }
+
+    private ResponseEntity<?> buildLogoutResponse() {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookieService.deleteAccessTokenCookie().toString())
+                .header(HttpHeaders.SET_COOKIE, cookieService.deleteRefreshTokenCookie().toString())
+                .body(Map.of("message", "Logout successful"));
+    }
+
+    private Map<String, Object> buildSessionMap(SessionDto s, String currentAuthId) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", s.getId());
+        map.put("deviceInfo", s.getDeviceInfo());
+        map.put("ipAddress", s.getIpAddress());
+        map.put("createdAt", s.getCreatedAt());
+        map.put("isCurrent", s.getId().equals(currentAuthId));
+        return map;
+    }
+
+    private String getCookieValue(HttpServletRequest request, String name) {
+        if (request.getCookies() == null) return null;
+        for (Cookie c : request.getCookies()) {
+            if (name.equals(c.getName())) return c.getValue();
+        }
+        return null;
+    }
+
+    private String getClientIP(HttpServletRequest request) {
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isEmpty()) return xff.split(",")[0].trim();
+        String xri = request.getHeader("X-Real-IP");
+        if (xri != null && !xri.isEmpty()) return xri;
+        return request.getRemoteAddr();
+    }
+
+    private ResponseEntity<?> badRequest(String error, String message) {
+        return ResponseEntity.badRequest().body(buildErrorBody(error, message));
+    }
+
+    private ResponseEntity<?> unauthorized(String error, String message) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(buildErrorBody(error, message));
+    }
+
+    private ResponseEntity<?> serverError(String error) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", error));
+    }
+
+    private Map<String, String> buildErrorBody(String error, String message) {
+        Map<String, String> body = new HashMap<>();
+        body.put("error", error);
+        if (message != null) {
+            body.put("message", message);
+        }
+        return body;
+    }
 }

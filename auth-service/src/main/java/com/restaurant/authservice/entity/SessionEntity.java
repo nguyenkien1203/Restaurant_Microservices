@@ -3,6 +3,7 @@ package com.restaurant.authservice.entity;
 // File: auth-service/src/main/java/com/restaurant/authservice/entity/SessionEntity.java
 
 
+import com.restaurant.data.entity.IBaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SessionEntity {
+public class SessionEntity implements IBaseEntity<String> {
 
     @Id
     private String id;  // authId - UUID

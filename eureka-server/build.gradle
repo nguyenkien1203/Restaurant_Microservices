@@ -1,12 +1,3 @@
-plugins {
-    id 'java'
-    id 'org.springframework.boot' version "$springBootVersion"
-    id 'io.spring.dependency-management' version "$springDependencyManagementVersion"
-}
 description = 'Eureka Server - Service discovery and registration'
 
-dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
-}
+// All dependencies inherited from root build.gradle

@@ -335,5 +335,21 @@ public class JwtServiceImpl implements JwtInternalService, JwtExternalService {
     public boolean validateRefreshToken(String token) {
         return validateToken(token) && isRefreshToken(token);
     }
+
+    /**
+     * Get refresh token expiration in seconds
+     * @return expiration time in seconds
+     */
+    public long getRefreshTokenExpiration() {
+        return refreshTokenExpirationMs / 1000;
+    }
+
+    /**
+     * Get access token expiration in seconds
+     * @return expiration time in seconds
+     */
+    public long getAccessTokenExpiration() {
+        return accessTokenExpirationMs / 1000;
+    }
 }
 
