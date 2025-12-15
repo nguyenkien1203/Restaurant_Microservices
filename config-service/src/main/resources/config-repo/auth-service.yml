@@ -31,3 +31,21 @@ kafka:
     batch-size: 16384
     linger-ms: 1
     buffer-memory: 33554432
+
+# Security configuration
+restaurant:
+  security:
+    default-type: JWT
+    endpoints:
+      # Public endpoints - no authentication required
+      - path: /api/auth/login
+        type: PUBLIC
+      - path: /api/auth/register
+        type: PUBLIC
+      - path: /api/auth/refresh
+        type: PUBLIC
+      # Internal endpoint for service-to-service session validation
+      - path: /api/auth/sessions/*/validate
+        type: PUBLIC
+      - path: /actuator/**
+        type: PUBLIC

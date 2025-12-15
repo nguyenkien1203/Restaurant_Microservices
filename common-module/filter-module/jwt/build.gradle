@@ -4,6 +4,9 @@ dependencies {
     api "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
+    
+    // OpenFeign for session validation via auth-service
+    compileOnly 'org.springframework.cloud:spring-cloud-starter-openfeign'
 }
 jar {
     enabled = true

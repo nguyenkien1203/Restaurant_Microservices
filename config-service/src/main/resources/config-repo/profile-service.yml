@@ -45,3 +45,9 @@ restaurant:
     endpoints:
       - path: /actuator/**
         type: PUBLIC
+
+# JWT Session Validation via auth-service
+jwt:
+  session-validation:
+    feign:
+      enabled: true

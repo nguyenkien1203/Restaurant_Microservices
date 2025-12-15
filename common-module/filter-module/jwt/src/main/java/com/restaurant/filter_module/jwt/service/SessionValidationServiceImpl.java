@@ -1,40 +1,38 @@
-package com.restaurant.authservice.service.impl;
+package com.restaurant.filter_module.jwt.service;
 
-import com.restaurant.authservice.dto.SessionDto;
-import com.restaurant.authservice.service.SessionService;
 import com.restaurant.filter_module.jwt.dto.SessionInfo;
 import com.restaurant.filter_module.jwt.exception.SessionNotFoundException;
 import com.restaurant.filter_module.jwt.exception.SessionRevokedException;
-import com.restaurant.filter_module.jwt.service.ISessionValidationService;
+import com.restaurant.filter_module.jwt.repository.ISessionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
 /**
- * Implementation of ISessionValidationService for auth-service.
- * Validates sessions against the database.
+ * Default session validation service that validates sessions via
+ * ISessionRepository.
+ * This is a POJO instantiated by configuration classes (e.g.,
+ * SessionFeignAutoConfiguration).
  */
 @Slf4j
-@Service
 @RequiredArgsConstructor
 public class SessionValidationServiceImpl implements ISessionValidationService {
 
-    private final SessionService sessionService;
+    private final ISessionRepository sessionRepository;
 
     @Override
     public SessionInfo validateSession(String authId) throws SessionNotFoundException, SessionRevokedException {
         log.debug("Validating session: {}", authId);
 
-        Optional<SessionDto> sessionOpt = sessionService.findActiveSession(authId);
+        Optional<SessionInfo> sessionOpt = sessionRepository.findActiveSession(authId);
 
         if (sessionOpt.isEmpty()) {
             log.warn("Session not found or expired: {}", authId);
             throw new SessionNotFoundException("Session not found or expired");
         }
 
-        SessionDto session = sessionOpt.get();
+        SessionInfo session = sessionOpt.get();
 
         // Check if session was revoked (logoutAt is set)
         if (session.getLogoutAt() != null) {
@@ -68,7 +66,6 @@ public class SessionValidationServiceImpl implements ISessionValidationService {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return ISessionValidationService.super.isEnabled();
     }
 }
-

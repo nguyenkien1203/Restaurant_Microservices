@@ -9,5 +9,8 @@ dependencies {
     implementation project(':common-module:kafka-module')
     implementation project(':common-module:filter-module:core')
     implementation project(':common-module:filter-module:jwt')
+    
+    // OpenFeign for session validation via auth-service
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 }
 
