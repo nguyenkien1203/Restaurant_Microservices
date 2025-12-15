@@ -1,6 +1,7 @@
 dependencies {
     // Spring Boot Starter
     implementation 'org.springframework.boot:spring-boot-starter'
+    api 'org.springframework.boot:spring-boot-starter-data-jpa'
     api("org.springframework:spring-webmvc:$springFrameworkVersion")
     api "org.springframework.security:spring-security-core:$spring_security_core_version"
 

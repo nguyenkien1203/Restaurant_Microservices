@@ -92,15 +92,22 @@ public class ProfileFactory extends BaseCrudFactory<Long, ProfileDto, Long, Prof
 
     @Override
     protected <F extends IFilter> Optional<ProfileEntity> getEntity(Long id, F filter) throws DataFactoryException {
+        log.info("getEntity called with id={}, filter={}", id, filter);
+        
         if (id != null) {
+            log.info("Finding by id: {}", id);
             return crudRepository.findById(id);
         }
 
         if (filter instanceof ProfileFilter profileFilter) {
             if (profileFilter.getUserId() != null) {
-                return crudRepository.findByUserId(profileFilter.getUserId());
+                log.info("Finding by userId: {}", profileFilter.getUserId());
+                Optional<ProfileEntity> result = crudRepository.findByUserId(profileFilter.getUserId());
+                log.info("Result for userId {}: present={}", profileFilter.getUserId(), result.isPresent());
+                return result;
             }
             if (profileFilter.getEmail() != null) {
+                log.info("Finding by email: {}", profileFilter.getEmail());
                 return crudRepository.findByEmail(profileFilter.getEmail());
             }
         }

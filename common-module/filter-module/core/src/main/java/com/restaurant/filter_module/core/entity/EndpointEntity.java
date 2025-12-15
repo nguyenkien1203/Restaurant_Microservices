@@ -1,4 +1,4 @@
-package com.restaurant.authservice.entity;
+package com.restaurant.filter_module.core.entity;
 
 import com.restaurant.data.model.IEndpointModel;
 import jakarta.persistence.*;

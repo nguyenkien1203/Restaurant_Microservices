@@ -2,14 +2,14 @@ package com.restaurant.filter_module.jwt.enums;
 
 import com.restaurant.data.enums.IBaseErrorCode;
 
-public enum JwtSignatureException implements IBaseErrorCode {
+public enum SessionNotFoundErrorCode implements IBaseErrorCode {
 
-    JWT_SIGNATURE_ERROR_CODE("430", "JWT_SIGNATURE_ERROR_CODE", 401);
+    SESSION_NOT_FOUND_ERROR_CODE("432", "SESSION_NOT_FOUND_ERROR_CODE", 401);
     private final String errorCode;
     private final String messageCode;
     private final int httpStatusCode;
 
-    JwtSignatureException(String errorCode, String messageCode, int httpStatusCode) {
+    SessionNotFoundErrorCode(String errorCode, String messageCode, int httpStatusCode) {
         this.errorCode = errorCode;
         this.messageCode = messageCode;
         this.httpStatusCode = httpStatusCode;
@@ -29,4 +29,5 @@ public enum JwtSignatureException implements IBaseErrorCode {
     public int getHttpStatusCode() {
         return httpStatusCode;
     }
+
 }

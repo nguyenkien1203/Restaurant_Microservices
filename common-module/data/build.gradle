@@ -1,7 +1,7 @@
 description = 'Data Module - Common data models and DTOs'
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter'
+    api 'org.springframework.boot:spring-boot-starter'
 }
 
 jar {

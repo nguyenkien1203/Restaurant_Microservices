@@ -10,12 +10,9 @@ spring:
         use_sql_comments: true
     open-in-view: false
 
-  # TODO trong 1 file config database này e có theer define ra nhiều datasource cho các service khác nhau theo thẻ e tự qdinh
-  # sau đó trong đonạ init database config thì e chỉ ra prefix để nó lấy thông tin db tương ứng
-  # Common PostgreSQL DataSource Configuration
-  # PostgreSQL Configuration for Auth Service
+  # Primary DataSource - Service-specific database
+  # URL is set per-service in their respective config files
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/auth_service_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver

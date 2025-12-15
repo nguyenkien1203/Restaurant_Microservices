@@ -1,6 +1,6 @@
-package com.restaurant.authservice.repository;
+package com.restaurant.filter_module.core.repository;
 
-import com.restaurant.authservice.entity.EndpointEntity;
+import com.restaurant.filter_module.core.entity.EndpointEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

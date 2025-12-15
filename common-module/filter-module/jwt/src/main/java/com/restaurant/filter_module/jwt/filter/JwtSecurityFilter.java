@@ -8,6 +8,7 @@ import com.restaurant.filter_module.core.filter.BaseMvcFilter;
 import com.restaurant.filter_module.core.filter.FilterRequest;
 import com.restaurant.filter_module.core.filter.FilterResponse;
 import com.restaurant.filter_module.jwt.dto.JwtClaims;
+import com.restaurant.filter_module.jwt.exception.UnauthorizedException;
 import com.restaurant.filter_module.jwt.properties.JwtSecurityPropertiesConfig;
 import com.restaurant.filter_module.jwt.service.IJwtStatelessValidator;
 
@@ -60,7 +61,7 @@ public class JwtSecurityFilter extends BaseMvcFilter {
 
         if (!StringUtils.hasText(token)) {
             log.warn("No JWT token found for: {}", httpRequest.getRequestURI());
-            throw new FilterException("Authentication required");
+            throw new UnauthorizedException("Authentication required");
         }
 
         // Step 2: STATELESS validation only (decrypt + verify signature)
@@ -86,7 +87,8 @@ public class JwtSecurityFilter extends BaseMvcFilter {
 
     private String extractTokenFromCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
-        if (cookies == null) return null;
+        if (cookies == null)
+            return null;
 
         return Arrays.stream(cookies)
                 .filter(c -> jwtConfig.getCookieName().equals(c.getName()))
@@ -101,10 +103,16 @@ public class JwtSecurityFilter extends BaseMvcFilter {
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
 
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(claims.getUserId(), null, authorities);
+        log.info("Setting Spring Security Context with authorities: {}", authorities);
+
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(claims.getUserId(),
+                null, authorities);
         authentication.setDetails(claims);
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        // Use SPRING'S SecurityContextHolder, not the custom one
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        log.info("Spring Security Authentication set: {}",
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication());
     }
 }

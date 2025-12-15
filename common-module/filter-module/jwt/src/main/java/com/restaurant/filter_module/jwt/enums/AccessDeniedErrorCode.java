@@ -2,14 +2,14 @@ package com.restaurant.filter_module.jwt.enums;
 
 import com.restaurant.data.enums.IBaseErrorCode;
 
-public enum RateLimitExceedException implements IBaseErrorCode {
-    RATE_LIMIT_EXCEEDED("432", "RATE_LIMIT_EXCEEDED", 429);
+public enum AccessDeniedErrorCode implements IBaseErrorCode {
+    ACCESS_DENIED_ERROR("428", "ACCESS_DENIED_ERROR", 403);
 
     private final String errorCode;
     private final String messageCode;
     private final int httpStatusCode;
 
-    RateLimitExceedException(String errorCode, String messageCode, int httpStatusCode) {
+    AccessDeniedErrorCode(String errorCode, String messageCode, int httpStatusCode) {
         this.errorCode = errorCode;
         this.messageCode = messageCode;
         this.httpStatusCode = httpStatusCode;

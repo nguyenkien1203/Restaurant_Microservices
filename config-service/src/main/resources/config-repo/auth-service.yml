@@ -1,8 +1,22 @@
 server:
   port: 8081
 
-# Endpoint security is managed in database (endpoint_config table)
-# See: DatabaseEndpointSupporter in filter-module:core
+spring:
+  # Multiple DataSource Configuration
+  datasource:
+    # 1. Primary DataSource - Auth DB
+    auth:
+      jdbc-url: jdbc:postgresql://localhost:5432/auth_service_db
+      username: ${SPRING_DATASOURCE_USERNAME:postgres}
+      password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+      driver-class-name: org.postgresql.Driver
+    # 2. Secondary DataSource - Shared Config DB
+    shared:
+      enabled: true
+      jdbc-url: jdbc:postgresql://localhost:5432/shared_config_db
+      username: ${SPRING_DATASOURCE_USERNAME:postgres}
+      password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+      driver-class-name: org.postgresql.Driver
 
 # Kafka Configuration for Auth Service
 kafka:

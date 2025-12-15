@@ -10,7 +10,9 @@ import org.springframework.context.annotation.ComponentScan;
 		"com.restaurant.redismodule",
 		"com.restaurant.factorymodule",
 		"com.restaurant.kafkamodule",
-		"com.restaurant.securitymodule"
+		"com.restaurant.filter_module.core",
+		"com.restaurant.filter_module.jwt",
+		"com.restaurant.data"
 })
 public class ProfileServiceApplication {
 

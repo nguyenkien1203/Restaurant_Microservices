@@ -71,13 +71,15 @@ public class DefaultOnePerRequestFilter extends BaseOnePerRequestFilter {
 
             //set context để dùng trong các tầng dưới
             SecurityContextHolder.setContext(securityContext);
+
             filterChain.doFilter(httpServletRequest, httpServletResponse);
 
             //có thể xử lý thêm các logic log time xử lý hay gì thì tùy.
             //đoạn này là sau khi xong hết nghiệp vụ controller và trả về cho client
         } catch (Exception e) {
-            log.error("Filter error for {}: {}", request.getRequestURI(), e.getMessage());
             handleFilterError(response, e);
+            log.error("Filter error for {}: {}", request.getRequestURI(), e.getMessage());
+
         }
     }
 
@@ -99,6 +101,9 @@ public class DefaultOnePerRequestFilter extends BaseOnePerRequestFilter {
                      e.getMessage().contains("JWT") ||
                      e.getMessage().contains("token"))) {
                     statusCode = HttpStatus.UNAUTHORIZED.value();
+                }
+                if(e.getMessage() != null && e.getMessage().contains("Access denied")) {
+                    statusCode = HttpStatus.FORBIDDEN.value();
                 }
             }
 

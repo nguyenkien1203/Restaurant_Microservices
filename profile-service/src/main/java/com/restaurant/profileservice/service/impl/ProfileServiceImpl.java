@@ -62,6 +62,7 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
+    @Transactional
     public ProfileDto getProfileByUserId(Long userId) throws CacheException, DataFactoryException {
         log.info("Getting profile by userId: {}", userId);
         ProfileFilter filter = ProfileFilter.builder()
