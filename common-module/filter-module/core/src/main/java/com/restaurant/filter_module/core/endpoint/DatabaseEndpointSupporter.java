@@ -13,10 +13,6 @@ import org.springframework.util.AntPathMatcher;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-/**
- * Database-backed endpoint configuration supporter.
-
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -25,7 +21,6 @@ public class DatabaseEndpointSupporter implements IEndpointSupporter {
     private final EndpointRepository endpointRepository;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-    // Cache endpoints to avoid repeated DB queries
     private List<EndpointEntity> cachedEndpoints = new CopyOnWriteArrayList<>();
 
     @PostConstruct
@@ -33,9 +28,6 @@ public class DatabaseEndpointSupporter implements IEndpointSupporter {
         refreshCache();
     }
 
-    /**
-     * Refresh the endpoint cache from database
-     */
     public void refreshCache() {
         cachedEndpoints = endpointRepository.findAll()
                 .stream()
@@ -44,36 +36,45 @@ public class DatabaseEndpointSupporter implements IEndpointSupporter {
         log.info("Loaded {} active endpoint configs from database", cachedEndpoints.size());
     }
 
+
     @Override
-    public IEndpointModel getEndpoint(String endpoint) throws FilterException {
-        log.info("Looking up endpoint config for: {}", endpoint);
+    public IEndpointModel getEndpoint(String endpoint, String method) throws FilterException {
+        log.debug("Looking up endpoint config for: {} [{}]", endpoint, method);
 
-        // First try exact match
-        for (EndpointEntity entity : cachedEndpoints) {
-            if (entity.getEndpoint().equals(endpoint)) {
-                log.info("Found exact match: endpoint={}, securityType={}",
-                        entity.getEndpoint(), entity.getSecurityType());
-                return entity;
-            }
-        }
 
-        // Then try pattern match using pathPattern column
         for (EndpointEntity entity : cachedEndpoints) {
+
+            // 1. Check url
+            boolean isPathMatch = false;
             String pattern = entity.getPathPattern();
-            if (pattern != null && pathMatcher.match(pattern, endpoint)) {
-                log.info("Found pattern match: pattern={}, endpoint={}, securityType={}",
-                        pattern, endpoint, entity.getSecurityType());
+
+            if (pattern != null) {
+
+                isPathMatch = pathMatcher.match(pattern, endpoint);
+            }
+
+            if (!isPathMatch) {
+                continue;
+            }
+
+
+            String configMethod = entity.getMethod();
+
+            boolean isMethodMatch = "ALL".equalsIgnoreCase(configMethod)
+                    || (configMethod != null && configMethod.equalsIgnoreCase(method));
+
+
+            if (isMethodMatch) {
+                log.info("Found match: pattern={} method={}, endpoint={} method={}, securityType={}",
+                        pattern, configMethod, endpoint, method, entity.getSecurityType());
                 return entity;
             }
         }
 
-        log.warn("No config found for endpoint: {}, using default PUBLIC", endpoint);
+        log.warn("No config found for endpoint: {} [{}], using default PUBLIC", endpoint, method);
         return createDefaultEndpoint(endpoint);
     }
 
-    /**
-     * Create a default endpoint config for unregistered endpoints
-     */
     private IEndpointModel createDefaultEndpoint(String endpoint) {
         return EndpointEntity.builder()
                 .endpoint(endpoint)

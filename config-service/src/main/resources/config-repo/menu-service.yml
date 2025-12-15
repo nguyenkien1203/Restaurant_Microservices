@@ -4,9 +4,19 @@ spring:
 
   # PostgreSQL Configuration for Menu Service
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/menu_service_db}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    # 1. Primary DataSource - Profile DB
+    menu:
+      jdbc-url: jdbc:postgresql://localhost:5432/menu_service_db
+      username: ${SPRING_DATASOURCE_USERNAME:postgres}
+      password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+      driver-class-name: org.postgresql.Driver
+    # 2. Secondary DataSource - Shared Config DB
+    shared:
+      enabled: true
+      jdbc-url: jdbc:postgresql://localhost:5432/shared_config_db
+      username: ${SPRING_DATASOURCE_USERNAME:postgres}
+      password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+      driver-class-name: org.postgresql.Driver
 
   # Kafka Consumer Group for Menu Service
   kafka:
@@ -33,3 +43,7 @@ restaurant:
         type: PUBLIC
       - path: /api/menu/available
         type: PUBLIC
+jwt:
+  session-validation:
+    feign:
+      enabled: true

@@ -51,7 +51,7 @@ public class DefaultOnePerRequestFilter extends BaseOnePerRequestFilter {
             SecurityContext securityContext = SecurityContextHolder.getOrCreateContext();
             securityContext.setRequestTime(LocalDateTime.now());
             //call DB lấy lên api đã config
-            IEndpointModel iEndpointModel = iEndpointSupporter.getEndpoint(UriUtil.replaceQuery(request.getRequestURI()));
+            IEndpointModel iEndpointModel = iEndpointSupporter.getEndpoint(UriUtil.replaceQuery(request.getRequestURI()), request.getMethod());
             securityContext.setEndpointModel(iEndpointModel);
 
             DefaultFilterRequest defaultFilterRequest = DefaultFilterRequest.builder()

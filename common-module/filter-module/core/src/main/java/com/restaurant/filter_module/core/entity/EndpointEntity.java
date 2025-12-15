@@ -45,6 +45,9 @@ public class EndpointEntity implements IEndpointModel {
     @Builder.Default
     private boolean isActive = true;
 
+    @Column(name = "method", nullable = false)
+    private String method;
+
     @Override
     public String getEndpoint() {
         return endpoint;

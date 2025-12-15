@@ -1,8 +1,9 @@
 package com.restaurant.orderservice.controller;
 
 import com.restaurant.factorymodule.exception.DataFactoryException;
+import com.restaurant.filter_module.core.context.SecurityContext;
+import com.restaurant.filter_module.core.context.SecurityContextHolder;
 import com.restaurant.orderservice.dto.*;
-import com.restaurant.securitymodule.model.UserPrincipal;
 import com.restaurant.orderservice.service.OrderService;
 import com.restaurant.redismodule.exception.CacheException;
 import jakarta.validation.Valid;
@@ -11,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,10 +32,9 @@ public class OrderController {
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<OrderDto> createOrder(
-            @Valid @RequestBody CreateOrderRequest request,
-            Authentication authentication) throws DataFactoryException {
+            @Valid @RequestBody CreateOrderRequest request) throws DataFactoryException {
 
-        Long userId = extractUserId(authentication);
+        Long userId = extractUserId();
         log.info("POST /api/orders - Creating order for user: {}", userId);
 
         OrderDto order = orderService.createOrder(request, userId);
@@ -72,10 +71,9 @@ public class OrderController {
      */
     @GetMapping("/my-orders")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<OrderDto>> getMyOrders(
-            Authentication authentication) throws CacheException, DataFactoryException {
+    public ResponseEntity<List<OrderDto>> getMyOrders() throws CacheException, DataFactoryException {
 
-        Long userId = extractUserId(authentication);
+        Long userId = extractUserId();
         log.info("GET /api/orders/my-orders - user: {}", userId);
 
         List<OrderDto> orders = orderService.getMyOrders(userId, null);
@@ -89,10 +87,9 @@ public class OrderController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<OrderDto> updateOrder(
             @PathVariable Long id,
-            @Valid @RequestBody UpdateOrderRequest request,
-            Authentication authentication) throws CacheException, DataFactoryException {
+            @Valid @RequestBody UpdateOrderRequest request) throws CacheException, DataFactoryException {
 
-        Long userId = extractUserId(authentication);
+        Long userId = extractUserId();
         log.info("PUT /api/orders/{} - user: {}", id, userId);
 
         OrderDto order = orderService.updateOrder(id, request, userId);
@@ -105,10 +102,9 @@ public class OrderController {
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> cancelOrder(
-            @PathVariable Long id,
-            Authentication authentication) throws CacheException, DataFactoryException {
+            @PathVariable Long id) throws CacheException, DataFactoryException {
 
-        Long userId = extractUserId(authentication);
+        Long userId = extractUserId();
         log.info("DELETE /api/orders/{} - user: {}", id, userId);
 
         orderService.cancelOrder(id, userId);
@@ -176,10 +172,9 @@ public class OrderController {
      */
     @GetMapping("/driver/assigned")
     @PreAuthorize("hasRole('DRIVER')")
-    public ResponseEntity<List<OrderDto>> getDriverAssignedOrders(
-            Authentication authentication) throws CacheException, DataFactoryException {
+    public ResponseEntity<List<OrderDto>> getDriverAssignedOrders() throws CacheException, DataFactoryException {
 
-        Long driverId = extractUserId(authentication);
+        Long driverId = extractUserId();
         log.info("GET /api/orders/driver/assigned - driver: {}", driverId);
 
         List<OrderDto> orders = orderService.getDriverAssignedOrders(driverId);
@@ -192,10 +187,9 @@ public class OrderController {
     @PatchMapping("/{id}/out-for-delivery")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<OrderDto> markOutForDelivery(
-            @PathVariable Long id,
-            Authentication authentication) throws CacheException, DataFactoryException {
+            @PathVariable Long id) throws CacheException, DataFactoryException {
 
-        Long driverId = extractUserId(authentication);
+        Long driverId = extractUserId();
         log.info("PATCH /api/orders/{}/out-for-delivery - driver: {}", id, driverId);
 
         OrderDto order = orderService.markOutForDelivery(id, driverId);
@@ -208,10 +202,9 @@ public class OrderController {
     @PatchMapping("/{id}/delivered")
     @PreAuthorize("hasRole('DRIVER')")
     public ResponseEntity<OrderDto> markDelivered(
-            @PathVariable Long id,
-            Authentication authentication) throws CacheException, DataFactoryException {
+            @PathVariable Long id) throws CacheException, DataFactoryException {
 
-        Long driverId = extractUserId(authentication);
+        Long driverId = extractUserId();
         log.info("PATCH /api/orders/{}/delivered - driver: {}", id, driverId);
 
         OrderDto order = orderService.markDelivered(id, driverId);
@@ -227,10 +220,9 @@ public class OrderController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<OrderDto> createPreOrder(
             @PathVariable Long reservationId,
-            @Valid @RequestBody CreateOrderRequest request,
-            Authentication authentication) throws DataFactoryException {
+            @Valid @RequestBody CreateOrderRequest request) throws DataFactoryException {
 
-        Long userId = extractUserId(authentication);
+        Long userId = extractUserId();
         log.info("POST /api/orders/pre-order/{} - user: {}", reservationId, userId);
 
         OrderDto order = orderService.createPreOrder(reservationId, request, userId);
@@ -239,11 +231,11 @@ public class OrderController {
 
     // ========== HELPER METHODS ==========
 
-    private Long extractUserId(Authentication authentication) {
-        if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal) {
-            UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-            return principal.getUserId();
+    private Long extractUserId() {
+        SecurityContext ctx = SecurityContextHolder.getContext();
+        if (ctx != null && ctx.getUserId() != null) {
+            return ctx.getUserId();
         }
-        throw new IllegalStateException("User ID not found in authentication");
+        throw new IllegalStateException("User ID not found in security context");
     }
 }

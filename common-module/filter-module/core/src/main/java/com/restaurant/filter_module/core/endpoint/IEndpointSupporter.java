@@ -16,5 +16,5 @@ public interface IEndpointSupporter {
      * @return the mid
      * @throws FilterException the filter exception
      */
-    IEndpointModel getEndpoint(String endpoint) throws FilterException;
+    IEndpointModel getEndpoint(String endpoint, String method) throws FilterException;
 }

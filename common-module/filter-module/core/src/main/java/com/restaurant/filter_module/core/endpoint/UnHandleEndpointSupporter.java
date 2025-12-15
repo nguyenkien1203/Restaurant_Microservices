@@ -22,7 +22,7 @@ public class UnHandleEndpointSupporter implements IEndpointSupporter {
     }
 
     @Override
-    public IEndpointModel getEndpoint(String endpoint) throws FilterException {
+    public IEndpointModel getEndpoint(String endpoint, String method) throws FilterException {
         return null;
     }
 }

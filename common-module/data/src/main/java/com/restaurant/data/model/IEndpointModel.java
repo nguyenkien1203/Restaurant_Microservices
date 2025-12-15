@@ -70,4 +70,6 @@ public interface IEndpointModel {
      * @return the boolean
      */
     boolean isActive();
+
+    String getMethod();
 }
