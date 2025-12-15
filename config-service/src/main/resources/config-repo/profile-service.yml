@@ -2,11 +2,21 @@ spring:
   application:
     name: profile-service
 
-  # PostgreSQL Configuration for Profile Service
+  # Multiple DataSource Configuration
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/profile_service_db}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    # 1. Primary DataSource - Profile DB
+    profile:
+      jdbc-url: jdbc:postgresql://localhost:5432/profile_service_db
+      username: ${SPRING_DATASOURCE_USERNAME:postgres}
+      password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+      driver-class-name: org.postgresql.Driver
+    # 2. Secondary DataSource - Shared Config DB
+    shared:
+      enabled: true
+      jdbc-url: jdbc:postgresql://localhost:5432/shared_config_db
+      username: ${SPRING_DATASOURCE_USERNAME:postgres}
+      password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+      driver-class-name: org.postgresql.Driver
 
   # Kafka Configuration for Profile Service (Consumer)
   kafka:
@@ -35,3 +45,9 @@ restaurant:
     endpoints:
       - path: /actuator/**
         type: PUBLIC
+
+# JWT Session Validation via auth-service
+jwt:
+  session-validation:
+    feign:
+      enabled: true

@@ -5,9 +5,15 @@ spring:
     import: optional:configserver:http://localhost:8888
   cloud:
     config:
+      name: menu-service, actuator-config, redis-config, database-config, eureka-config, kafka-config, security-config
       fail-fast: false
       retry:
         max-attempts: 6
         initial-interval: 1000
         multiplier: 1.1
         max-interval: 2000
+# Session validation via auth-service (local fallback if config-server not available)
+jwt:
+  session-validation:
+    feign:
+      enabled: true

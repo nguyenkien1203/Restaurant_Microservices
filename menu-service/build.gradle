@@ -1,14 +1,15 @@
 description = 'Menu Service - Manages restaurant menu items and categories'
 
 dependencies {
+    // Internal modules
+    implementation project(':common-module:data')
+    implementation project(':common-module:utils')
+    implementation project(':common-module:redis-module')
+    implementation project(':common-module:factory-module')
+    implementation project(':common-module:kafka-module')
+    implementation project(':common-module:filter-module:jwt')
+    implementation project(':common-module:filter-module:core')
 
-	// Internal modules
-	api project(':common-module:data')
-	api project(':common-module:utils')
-	api project(':common-module:redis-module')
-	api project(':common-module:factory-module')
-	api project(':common-module:kafka-module')
-	api project(':common-module:security-module')
-
+    // OpenFeign for session validation via auth-service
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 }
-

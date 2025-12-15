@@ -3,18 +3,25 @@ spring:
   application:
     name: order-service
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/order_service_db}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+    # 1. Primary DataSource - Order DB
+    order:
+      jdbc-url: jdbc:postgresql://localhost:5432/order_service_db
+      username: ${SPRING_DATASOURCE_USERNAME:postgres}
+      password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        maximum-pool-size: 3
+        minimum-idle: 1
+    # 2. Secondary DataSource - Shared Config DB
+    shared:
+      enabled: true
+      jdbc-url: jdbc:postgresql://localhost:5432/shared_config_db
+      username: ${SPRING_DATASOURCE_USERNAME:postgres}
+      password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        maximum-pool-size: 2
+        minimum-idle: 1
 
 server:
   port: 8085
@@ -70,3 +77,7 @@ restaurant:
     endpoints:
       - path: /actuator/**
         type: PUBLIC
+jwt:
+  session-validation:
+    feign:
+      enabled: true

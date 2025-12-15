@@ -14,3 +14,7 @@ dependencies {
 	// Configuration processor
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 }
+
+jar {
+    enabled = true
+}

@@ -45,15 +45,19 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: "*"
+            allowedOrigins: 
+              - "http://localhost:3000"      # React dev server
+              - "http://localhost:5173"      # Vite dev server  
+              - "https://yourdomain.com"     # Production frontend
             allowedMethods:
               - GET
               - POST
               - PUT
               - DELETE
+              - PATCH
               - OPTIONS
             allowedHeaders: "*"
-            allow-credentials: false
+            allow-credentials: true
 
   # Kafka Consumer Group for API Gateway
   kafka:

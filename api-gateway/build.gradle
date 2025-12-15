@@ -1,36 +1,16 @@
 description = 'API Gateway - Routes and filters all incoming requests'
 
-// Exclude Spring MVC (we need WebFlux for reactive gateway)
-configurations {
-    all {
-        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-web'
-        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
-    }
-}
-
 dependencies {
-    // Spring Cloud Gateway Server WebFlux (replaces deprecated spring-cloud-starter-gateway)
+    // Spring Cloud Gateway (WebFlux-based)
     implementation 'org.springframework.cloud:spring-cloud-starter-gateway-server-webflux'
-    // WebFlux (required for Spring Cloud Gateway)
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
-    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-    implementation 'org.springframework.cloud:spring-cloud-starter-config'
-    //jjwt
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 
-    api project(':common-module:redis-module')
-    // Lombok
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    
-    // Monitoring
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    
     // Reactive Redis for rate limiting
     implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
-    
+
     // Messaging
     implementation 'org.springframework.kafka:spring-kafka'
+
+    // Internal modules
+    implementation project(':common-module:redis-module')
 }

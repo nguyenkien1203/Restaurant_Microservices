@@ -1,13 +1,16 @@
 description = 'Profile Service - Manages customer profiles and preferences'
 
 dependencies {
-
-	api project(':common-module:data')
-	api project(':common-module:utils')
-	api project(':common-module:redis-module')
-	api project(':common-module:factory-module')
-	api project(':common-module:kafka-module')
-	api project(':common-module:security-module')
-
+    // Internal modules
+    implementation project(':common-module:data')
+    implementation project(':common-module:utils')
+    implementation project(':common-module:redis-module')
+    implementation project(':common-module:factory-module')
+    implementation project(':common-module:kafka-module')
+    implementation project(':common-module:filter-module:core')
+    implementation project(':common-module:filter-module:jwt')
+    
+    // OpenFeign for session validation via auth-service
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 }
 

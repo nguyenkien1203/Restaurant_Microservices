@@ -1,0 +1,24 @@
+rootProject.name = 'VNPAY_Microservices'
+
+// Common modules
+include('common-module')
+include('common-module:redis-module')
+include('common-module:factory-module')
+include('common-module:data')
+include('common-module:utils')
+include('common-module:kafka-module')
+include('common-module:filter-module:core')
+include('common-module:filter-module:jwt')
+
+// Infrastructure services
+include('eureka-server')
+include('config-service')
+include('api-gateway')
+
+// Business services
+include('auth-service')
+include('menu-service')
+include('order-service')
+include('profile-service')
+//include('table-service')
+include('reservation-service')

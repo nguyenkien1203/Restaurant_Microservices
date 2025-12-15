@@ -1,24 +1,40 @@
-rootProject.name = 'VNPAY_Microservices'
+pluginManagement {
+    plugins {
+        id 'org.jetbrains.kotlin.jvm' version '2.1.10'
+    }
+    repositories {
+        mavenCentral()
+    }
+}
 
-// Common modules
-include('common-module')
-include('common-module:redis-module')
-include('common-module:factory-module')
-include('common-module:data')
-include('common-module:utils')
-include('common-module:kafka-module')
-include('common-module:security-module')
+rootProject.name = 'Restaurant_Microservices'
+FileTree buildFiles = fileTree(rootDir) {
+    List excludes = gradle.startParameter.projectProperties.get("excludeProjects")?.split(",")
+    include '**/*.gradle'
+    exclude 'build', '**/gradle', 'settings.gradle', 'buildSrc', '/build.gradle', '.*', 'out', 'stringer', 'libs'
+    exclude '**/grails3'
+    if (excludes) {
+        exclude excludes
+    }
+}
+
+String rootDirPath = rootDir.absolutePath + File.separator
+
+buildFiles.each { File buildFile ->
+    boolean isDefaultName = 'build.gradle'.equals(buildFile.name)
+    if (isDefaultName) {
+        String buildFilePath = buildFile.parentFile.absolutePath
+        String projectPath = buildFilePath.replace(rootDirPath, '').replace(File.separator, ':')
+        include projectPath
+    } else {
+        String projectName = buildFile.name.replace('.gradle', '')
+        String projectPath = ':' + projectName
+        include projectPath
+        def project = findProject(projectPath)
+        project.name = projectName
+        project.projectDir = buildFile.parentFile
+        project.buildFileName = buildFile.name
+    }
+}
 
 
-// Infrastructure services
-include('eureka-server')
-include('config-service')
-include('api-gateway')
-
-// Business services
-include('auth-service')
-include('menu-service')
-include('order-service')
-include('profile-service')
-include('table-service')
-include('reservation-service')

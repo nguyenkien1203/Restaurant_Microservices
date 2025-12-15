@@ -45,21 +45,27 @@ ext {
     springBootVersion = '3.5.7'
     springCloudVersion = "2025.0.0"
     springFrameworkVersion = '6.2.11'
+    spring_security_core_version = '7.0.0'
 
     /**
      * JWT version
      */
     jjwtVersion = '0.12.3'
-}
 
-// Common configuration for all projects
-allprojects {
-    group = 'com.restaurant'
-    version = '0.0.1-SNAPSHOT'
-    
-    repositories {
-        mavenCentral()
-    }
+    /**
+     * Servlet
+     */
+    servlet_api_version = '6.1.0'
+
+    /**
+     * jakarta
+     */
+    jakarta_persistent_api = '3.2.0'
+
+    /**
+     * Bucket Rate
+     */
+    bucket_rate_version = '4.10.0'
 }
 
 subprojects {
@@ -68,12 +74,12 @@ subprojects {
     apply plugin: 'idea'
     apply plugin: 'io.spring.dependency-management'
 
-    java {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(21)
-        }
+    tasks.register("wrapper", Wrapper) {
+        gradleVersion = "8.10.1"
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
     }
 
     repositories {
@@ -84,10 +90,6 @@ subprojects {
     configurations {
         configureEach { config ->
             exclude group: 'commons-logging', module: 'commons-logging'
-            // Only exclude WebFlux for non-gateway projects (API Gateway needs WebFlux)
-            if (project.name != 'api-gateway') {
-                exclude group: 'org.springframework.boot', module: 'spring-boot-starter-webflux'
-            }
         }
     }
 
@@ -141,60 +143,101 @@ subprojects {
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     }
+}
 
-    // Common service dependencies (excluding api-gateway and library modules)
-    if (!project.name.contains('module') && 
-        !project.name.contains('data') && 
-        !project.name.contains('utils') && 
-        !project.name.equals('api-gateway') &&
-        !project.name.equals('eureka-server') &&
-        !project.name.equals('config-service')) {
-        
-        dependencies {
-            // Spring Boot Starters
-            implementation 'org.springframework.boot:spring-boot-starter-web'
-            implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-            implementation 'org.springframework.boot:spring-boot-starter-actuator'
-            implementation 'org.springframework.boot:spring-boot-starter-validation'
-            implementation 'org.springframework.boot:spring-boot-starter-security'
-            
-            // Spring Cloud
-            implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-            implementation 'org.springframework.cloud:spring-cloud-starter-config'
-            
-            // Messaging
-            implementation 'org.springframework.kafka:spring-kafka'
-            
-            // Database
-            runtimeOnly 'org.postgresql:postgresql'
-        }
-    }
+/**
+ * Service project categories
+ */
+ext {
+    allServiceProjects = [
+        'auth-service',
+        'api-gateway',
+        'menu-service',
+        'order-service',
+        'profile-service',
+        'reservation-service',
+        'eureka-server',
+        'config-service'
+    ]
 
-    // Apply Spring Boot to service modules (not common modules)
-    if (!project.name.contains('module') && !project.name.contains('data') && !project.name.contains('utils')) {
+    businessServices = [
+        'auth-service',
+        'api-gateway',
+        'menu-service',
+        'order-service',
+        'profile-service',
+        'reservation-service'
+    ]
+
+    webMvcServices = [
+        'auth-service',
+        'menu-service',
+        'order-service',
+        'profile-service',
+        'reservation-service'
+    ]
+}
+
+/**
+ * Configure all subprojects based on their category
+ */
+subprojects { subproject ->
+    // Apply Spring Boot plugin to service projects (must be done during configuration phase)
+    if (subproject.name in rootProject.ext.allServiceProjects) {
         apply plugin: 'org.springframework.boot'
     }
 
-    // Disable bootJar for library modules
-    if (project.name.contains('module') || project.name.contains('data') || project.name.contains('utils')) {
-        if (tasks.findByName('bootJar')) {
-            bootJar {
-                enabled = false
+    // Use pluginManager to add dependencies after plugins are applied
+    pluginManager.withPlugin('org.springframework.boot') {
+        dependencies {
+            implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        }
+
+        // Eureka Server
+        if (subproject.name == 'eureka-server') {
+            dependencies {
+                implementation 'org.springframework.boot:spring-boot-starter-web'
+                implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
             }
         }
-        jar {
-            enabled = true
+
+        // Config Server
+        if (subproject.name == 'config-service') {
+            dependencies {
+                implementation 'org.springframework.boot:spring-boot-starter'
+                implementation 'org.springframework.cloud:spring-cloud-config-server'
+            }
+        }
+
+        // Business microservices (config client, eureka client, JWT)
+        if (subproject.name in rootProject.ext.businessServices) {
+            dependencies {
+                // Spring Cloud Config & Discovery
+                implementation 'org.springframework.cloud:spring-cloud-starter-config'
+                implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
+                // JWT
+                implementation "io.jsonwebtoken:jjwt-api:${rootProject.ext.jjwtVersion}"
+                runtimeOnly "io.jsonwebtoken:jjwt-impl:${rootProject.ext.jjwtVersion}"
+                runtimeOnly "io.jsonwebtoken:jjwt-jackson:${rootProject.ext.jjwtVersion}"
+            }
+        }
+
+        // Web MVC services (excludes api-gateway which uses WebFlux)
+        if (subproject.name in rootProject.ext.webMvcServices) {
+            dependencies {
+                // Spring Boot Web MVC Stack
+                implementation 'org.springframework.boot:spring-boot-starter-web'
+                implementation 'org.springframework.boot:spring-boot-starter-security'
+                implementation 'org.springframework.boot:spring-boot-starter-validation'
+                implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+                // Database - PostgreSQL
+                runtimeOnly 'org.postgresql:postgresql'
+
+                // Testing
+                testImplementation 'org.springframework.security:spring-security-test'
+            }
         }
     }
-
-    // Test configuration
-    tasks.named('test') {
-        useJUnitPlatform()
-    }
-}
-
-// Wrapper configuration
-wrapper {
-    gradleVersion = '8.5'
-    distributionType = Wrapper.DistributionType.ALL
 }

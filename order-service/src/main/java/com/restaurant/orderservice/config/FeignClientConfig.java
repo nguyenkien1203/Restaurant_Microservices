@@ -1,17 +1,16 @@
 package com.restaurant.orderservice.config;
 
-import com.restaurant.securitymodule.model.UserPrincipal;
+import com.restaurant.filter_module.core.context.SecurityContext;
+import com.restaurant.filter_module.core.context.SecurityContextHolder;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -31,27 +30,23 @@ public class FeignClientConfig {
 
             if (attributes != null) {
                 // CASE 1: Real User Request
-                // Extract user info from SecurityContext (set by security-module filters)
-                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                // Extract user info from SecurityContext (set by filter-module)
+                SecurityContext securityContext = SecurityContextHolder.getContext();
 
-                if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal) {
-                    UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-
-                    String userId = String.valueOf(principal.getUserId());
-                    String userEmail = principal.getEmail() != null && !principal.getEmail().isEmpty()
-                            ? principal.getEmail()
-                            : "user" + userId + "@system";
+                if (securityContext != null && securityContext.getUserId() != null) {
+                    String userId = String.valueOf(securityContext.getUserId());
+                    String userEmail = securityContext.getUserEmail() != null
+                            && !securityContext.getUserEmail().isEmpty()
+                                    ? securityContext.getUserEmail()
+                                    : "user" + userId + "@system";
 
                     // Format roles as comma-separated string (remove ROLE_ prefix for header)
-                    String roles = principal.getAuthorities().stream()
-                            .map(GrantedAuthority::getAuthority)
-                            .map(role -> role.startsWith("ROLE_") ? role.substring(5) : role)
-                            .collect(Collectors.joining(","));
-
-                    // Ensure roles is not empty - if no roles, use USER as default
-                    if (roles == null || roles.isEmpty()) {
-                        roles = "USER";
-                    }
+                    List<String> rolesList = securityContext.getRoles();
+                    String roles = rolesList != null && !rolesList.isEmpty()
+                            ? rolesList.stream()
+                                    .map(role -> role.startsWith("ROLE_") ? role.substring(5) : role)
+                                    .collect(Collectors.joining(","))
+                            : "USER";
 
                     // Pass the real user's details
                     template.header("X-User-Id", userId);

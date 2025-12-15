@@ -1,7 +1,5 @@
 package com.restaurant.orderservice.config;
 
-import com.restaurant.securitymodule.filter.BaseSecurityFilter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -10,19 +8,15 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
  * Security configuration for Order Service
- * Uses shared security-module for JWT authentication
+ * Uses filter-module for JWT authentication via database endpoint config
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
-@RequiredArgsConstructor
+@EnableMethodSecurity // Enables @PreAuthorize annotations
 public class SecurityConfig {
-
-        private final BaseSecurityFilter baseSecurityFilter;
 
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -31,8 +25,8 @@ public class SecurityConfig {
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
-                                                .anyRequest().permitAll())
-                                .addFilterBefore(baseSecurityFilter, UsernamePasswordAuthenticationFilter.class);
+                                                .anyRequest().permitAll() // Let the filter-module handle auth
+                                );
 
                 return http.build();
         }

@@ -1,20 +1,10 @@
 description = 'Authentication Service - Handles user authentication and authorization'
 
 dependencies {
-	// Service-specific: Spring Security
-	api 'org.springframework.boot:spring-boot-starter-security'
-	
-	// Service-specific: JWT for token-based authentication
-	api "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
-	runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
-	runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
-	
-	// Internal modules
-	api project(':common-module:redis-module')
-	api project(':common-module:factory-module')
-	api project(':common-module:kafka-module')
-
-	
-	// Testing
-	testImplementation 'org.springframework.security:spring-security-test'
+    // Internal modules
+    implementation project(':common-module:redis-module')
+    implementation project(':common-module:factory-module')
+    implementation project(':common-module:kafka-module')
+    implementation project(':common-module:filter-module:jwt')
+    implementation project(':common-module:filter-module:core')
 }
