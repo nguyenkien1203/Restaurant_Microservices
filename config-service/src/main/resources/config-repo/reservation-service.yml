@@ -2,10 +2,23 @@ spring:
   application:
     name: reservation-service
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/reservation_service_db}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
+    reservation:
+      jdbc-url: jdbc:postgresql://localhost:5432/reservation_service_db
+      username: ${SPRING_DATASOURCE_USERNAME:postgres}
+      password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        maximum-pool-size: 3
+        minimum-idle: 1
+    shared:
+      enabled: true
+      jdbc-url: jdbc:postgresql://localhost:5432/shared_config_db
+      username: ${SPRING_DATASOURCE_USERNAME:postgres}
+      password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        maximum-pool-size: 3
+        minimum-idle: 1
   jpa:
     hibernate:
       ddl-auto: update

@@ -4,7 +4,7 @@ spring:
 
   # PostgreSQL Configuration for Menu Service
   datasource:
-    # 1. Primary DataSource - Profile DB
+
     menu:
       jdbc-url: jdbc:postgresql://localhost:5432/menu_service_db
       username: ${SPRING_DATASOURCE_USERNAME:postgres}
