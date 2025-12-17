@@ -3,24 +3,24 @@ package com.restaurant.filter_module.jwt.filter;
 import com.restaurant.filter_module.core.chain.MvcFilterChain;
 import com.restaurant.filter_module.core.context.SecurityContext;
 import com.restaurant.filter_module.core.context.SecurityContextHolder;
+import com.restaurant.filter_module.core.enums.FilterCoreErrorCode;
 import com.restaurant.filter_module.core.exception.FilterException;
 import com.restaurant.filter_module.core.filter.BaseMvcFilter;
 import com.restaurant.filter_module.core.filter.FilterRequest;
 import com.restaurant.filter_module.core.filter.FilterResponse;
+import com.restaurant.filter_module.core.model.HttpServletResponseFormatter;
 import com.restaurant.filter_module.jwt.dto.JwtClaims;
 import com.restaurant.filter_module.jwt.exception.UnauthorizedException;
 import com.restaurant.filter_module.jwt.properties.JwtSecurityPropertiesConfig;
 import com.restaurant.filter_module.jwt.service.IJwtStatelessValidator;
-
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.util.Arrays;
 import java.util.List;
@@ -47,12 +47,7 @@ public class JwtSecurityFilter extends BaseMvcFilter {
     }
 
     @Override
-    public void doFilter(FilterRequest request, FilterResponse response, MvcFilterChain chain) throws FilterException {
-        if (shouldNotFilter(request)) {
-            chain.doFilter(request, response);
-            return;
-        }
-
+    public void doFilterInternal(FilterRequest request, FilterResponse response, MvcFilterChain chain) throws FilterException {
         HttpServletRequest httpRequest = request.getHttpServletRequest();
         log.debug("JwtSecurityFilter processing: {}", httpRequest.getRequestURI());
 
@@ -80,9 +75,26 @@ public class JwtSecurityFilter extends BaseMvcFilter {
         setSpringSecurityContext(claims);
 
         log.debug("JWT stateless validation passed for authId: {}", claims.getAuthId());
+        //add handler formater response after return to client
+        response.setFormatter(jwtResponseFormatter());
 
         // Continue to next filter (session validation happens in Interceptor)
         chain.doFilter(request, response);
+    }
+
+    private HttpServletResponseFormatter jwtResponseFormatter() throws FilterException {
+        return (response) -> {
+            try {
+                ContentCachingResponseWrapper responseWrapper = (ContentCachingResponseWrapper) response;
+
+                // TODO kiểm tra có jwt response ko nếu có thì add vào header để trả cho client
+                //  tưng tụ cho rsa filter thì có thể define hàm thực hiện mã hóa rp đối với ase này cần write lại body vào responseWrapper thì mới có data trả cho client
+
+            } catch (Exception e) {
+                log.error("JWT encrypt failed. Error: {}", e.getMessage(), e);
+                throw new FilterException(FilterCoreErrorCode.INTERNAL_ERROR, e.getMessage());
+            }
+        };
     }
 
     private String extractTokenFromCookie(HttpServletRequest request) {
@@ -110,9 +122,8 @@ public class JwtSecurityFilter extends BaseMvcFilter {
         authentication.setDetails(claims);
 
         // Use SPRING'S SecurityContextHolder, not the custom one
-        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(authentication);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        log.info("Spring Security Authentication set: {}",
-                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication());
+        log.info("Spring Security Authentication set: {}", SecurityContextHolder.getContext().getAuthentication());
     }
 }

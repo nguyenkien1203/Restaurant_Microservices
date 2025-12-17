@@ -16,7 +16,7 @@ public abstract class BaseMvcFilter implements MvcFilter {
             chain.doFilter(request, response);
             return;
         }
-        chain.doFilter(request, response);
+        doFilterInternal(request, response, chain);
     }
 
     /**
@@ -28,4 +28,14 @@ public abstract class BaseMvcFilter implements MvcFilter {
     protected boolean shouldNotFilter(FilterRequest request) {
         return false;
     }
+
+    /**
+     * Do filter internal.
+     *
+     * @param request  the request
+     * @param response the response
+     * @param chain    the chain
+     */
+    protected abstract void doFilterInternal(FilterRequest request, FilterResponse response, MvcFilterChain chain) throws FilterException;
+
 }

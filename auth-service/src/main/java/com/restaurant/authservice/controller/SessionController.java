@@ -43,6 +43,11 @@ public class SessionController {
                 })
                 .orElseGet(() -> {
                     log.info("Session not found or expired: {}", authId);
+                    //TODO xử lý message trả về
+                    //Mấy dạng message trả về có thể tạo ra 1 base controler
+                    // để tái xử dụng và handler các exception chung để luôn call 1  bảng quản lý mesage trả ra theo error code throw
+                    //đó là lý do tại sao lại tạo ra 1 IBaseErrorCode để quản lý các error code chung
+                    // tát cả luồng lỗi chỉ cần throw exception với error code đã định nghĩa sẵn và define 1 class handler các exception này
                     return ResponseEntity.ok(SessionValidationResponse.invalid(
                             "SESSION_NOT_FOUND",
                             "Session not found or expired"));

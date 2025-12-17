@@ -26,7 +26,8 @@ public class JwtController {
         log.info("Generating JWS token with claims: {}", claims);
         
         String token = jwtService.generateJwsToken(claims);
-        
+
+        //TODO các thong tin dạng fix cứng string như này nên quy ra constant hoặc enum để sau tái sử dụng tránh trường hợp fix nhiêu nơi sau maintain khó
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
         response.put("type", "JWS");

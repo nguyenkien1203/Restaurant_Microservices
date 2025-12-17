@@ -16,4 +16,5 @@ import lombok.Setter;
 public class DefaultFilterResponse implements FilterResponse {
 
     private HttpServletResponse httpServletResponse;
+    private HttpServletResponseFormatter formatter;
 }

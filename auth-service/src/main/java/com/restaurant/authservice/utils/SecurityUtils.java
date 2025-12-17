@@ -11,6 +11,8 @@ import java.util.Collection;
  * Utility class for security-related operations
  * Provides helper methods for authorization checks
  */
+//TODO quản lý utils
+// Nếu đã là util thì phải là statis cứ k quản lý kiểu @Component để ở đâu cũng có thể gọi dk k cần new hay @Autowired
 @Component("securityUtils")
 public class SecurityUtils {
 

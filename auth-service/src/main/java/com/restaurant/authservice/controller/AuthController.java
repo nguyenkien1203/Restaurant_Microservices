@@ -46,7 +46,7 @@ public class AuthController {
             return serverError("Registration failed");
         }
     }
-
+    //TODO  httpRequest.getHeader("User-Agent") => các thông tin dạng này cũng nên để constants
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         try {
@@ -150,7 +150,9 @@ public class AuthController {
     }
 
     // ==================== HELPER METHODS ====================
-
+    // TODO thông tin cookie có thể add vào context đ dùng ở filter k cần add nh này. với phần rp trả về client nên tạo ra 1
+    //  baseRessponse để dùng chhung cho all api ví dụ Base chứa code,message,data thì data là dạng generic có thể truyền vào là
+    // 1 object bất kỳ tùy api thì client sẽ handler theo code response cũng dễ và code nhìn chuẩn chỉnh format hơn
     private ResponseEntity<?> buildLoginResponse(LoginResponse response, HttpStatus status) {
         return ResponseEntity.status(status)
                 .header(HttpHeaders.SET_COOKIE, cookieService.createAccessTokenCookie(response.getAccessToken()).toString())
@@ -165,6 +167,7 @@ public class AuthController {
                 .body(Map.of("message", "Logout successful"));
     }
 
+    //TODO convert qua constants
     private Map<String, Object> buildSessionMap(SessionDto s, String currentAuthId) {
         Map<String, Object> map = new HashMap<>();
         map.put("id", s.getId());
@@ -175,6 +178,9 @@ public class AuthController {
         return map;
     }
 
+    //TODO xử lý HttpServletRequest
+    //Nếu có thể tách hàm này ra 1 class utils dùng chung thì tốt hơn và có thể ử lý các thông tin
+    // này add vào context để dùng trong luồng k cần phải get đi get lại HttpServletRequest
     private String getCookieValue(HttpServletRequest request, String name) {
         if (request.getCookies() == null) return null;
         for (Cookie c : request.getCookies()) {
@@ -183,6 +189,8 @@ public class AuthController {
         return null;
     }
 
+    //TODO xử lý HttpServletRequest
+    //tương tụ ở trên có thể xử lý dk ừ filter
     private String getClientIP(HttpServletRequest request) {
         String xff = request.getHeader("X-Forwarded-For");
         if (xff != null && !xff.isEmpty()) return xff.split(",")[0].trim();
@@ -191,6 +199,8 @@ public class AuthController {
         return request.getRemoteAddr();
     }
 
+    //TODO response error có thể tạo 1 baseResponse để dùng chung cho tất cả api
+    //Đa vào 1 base controler để các controller khác kế thừa và trả về 1 định dạng format
     private ResponseEntity<?> badRequest(String error, String message) {
         return ResponseEntity.badRequest().body(buildErrorBody(error, message));
     }

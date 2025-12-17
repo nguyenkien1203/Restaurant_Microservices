@@ -43,6 +43,10 @@ public class SessionInterceptorConfig implements WebMvcConfigurer {
         return new SessionValidationInterceptor(sessionValidationService);
     }
 
+    //TODO add interceptor để check session
+    //Trong bảng endpoint có quản lý api có cần kiểm tra session hay không ispublic
+    // nên k cần add excludePathPatterns mà ở interceptor check AP public hay không để vào interceptor
+    // Mình đưa ra bảng quản lý endpoint để dễ dàng quản lý hơn và có thể chủdđộng thay đổi rule k cần update code
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         log.info("Registering SessionValidationInterceptor");

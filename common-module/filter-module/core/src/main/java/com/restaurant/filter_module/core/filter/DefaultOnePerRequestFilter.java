@@ -10,10 +10,6 @@ import com.restaurant.filter_module.core.exception.FilterException;
 import com.restaurant.filter_module.core.model.DefaultFilterRequest;
 import com.restaurant.filter_module.core.model.DefaultFilterResponse;
 import com.restaurant.filter_module.core.util.UriUtil;
-
-import java.io.IOException;
-import java.time.LocalDateTime;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,6 +17,10 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.web.util.ContentCachingResponseWrapper;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
 
 /**
  * The type Default one per request filter.
@@ -48,6 +48,8 @@ public class DefaultOnePerRequestFilter extends BaseOnePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) {
         try {
+            //cache rp để xử lý edit thêm nếu cần. ví dụ mã hóa rp trước khi trả cho client
+            ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response);
             SecurityContext securityContext = SecurityContextHolder.getOrCreateContext();
             securityContext.setRequestTime(LocalDateTime.now());
             //call DB lấy lên api đã config
@@ -60,7 +62,7 @@ public class DefaultOnePerRequestFilter extends BaseOnePerRequestFilter {
                     .build();
 
             DefaultFilterResponse defaultFilterResponse = DefaultFilterResponse.builder()
-                    .httpServletResponse(response)
+                    .httpServletResponse(responseWrapper)
                     .build();
 
             //duyệt qua tất cả các chain theo security type config cho api cụ thể
@@ -74,12 +76,16 @@ public class DefaultOnePerRequestFilter extends BaseOnePerRequestFilter {
 
             filterChain.doFilter(httpServletRequest, httpServletResponse);
 
-            //có thể xử lý thêm các logic log time xử lý hay gì thì tùy.
-            //đoạn này là sau khi xong hết nghiệp vụ controller và trả về cho client
+            //xử lý formater ở chain cuối dk set ví dụ như jwt response filter hay rsa response filter
+            if (defaultFilterResponse.getFormatter() != null) {
+                defaultFilterResponse.getFormatter().format(httpServletResponse);
+            }
+
+            //copy toàn bộ rp từ các lớp xử lý để trả cho client
+            responseWrapper.copyBodyToResponse();
         } catch (Exception e) {
             handleFilterError(response, e);
             log.error("Filter error for {}: {}", request.getRequestURI(), e.getMessage());
-
         }
     }
 
@@ -96,13 +102,13 @@ public class DefaultOnePerRequestFilter extends BaseOnePerRequestFilter {
             // Set appropriate status based on error type
             if (statusCode == 0 || statusCode == 500) {
                 // Default to 401 for authentication errors
-                if (e.getMessage() != null && 
-                    (e.getMessage().contains("Authentication") || 
-                     e.getMessage().contains("JWT") ||
-                     e.getMessage().contains("token"))) {
+                if (e.getMessage() != null &&
+                        (e.getMessage().contains("Authentication") ||
+                                e.getMessage().contains("JWT") ||
+                                e.getMessage().contains("token"))) {
                     statusCode = HttpStatus.UNAUTHORIZED.value();
                 }
-                if(e.getMessage() != null && e.getMessage().contains("Access denied")) {
+                if (e.getMessage() != null && e.getMessage().contains("Access denied")) {
                     statusCode = HttpStatus.FORBIDDEN.value();
                 }
             }

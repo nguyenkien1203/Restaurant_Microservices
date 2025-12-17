@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SecurityContextFilter extends BaseMvcFilter {
 
     @Override
-    public void doFilter(FilterRequest request, FilterResponse response, MvcFilterChain chain) throws FilterException {
+    public void doFilterInternal(FilterRequest request, FilterResponse response, MvcFilterChain chain) throws FilterException {
         HttpServletRequest httpServletRequest = request.getHttpServletRequest();
         SecurityContext securityContext = SecurityContextHolder.getOrCreateContext();
         String requestId = HttpServletUtil.getRequestId(httpServletRequest);

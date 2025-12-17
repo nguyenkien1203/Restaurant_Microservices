@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+//TODO quản lý dto
+//chia cụ thể các package riêng đâu là dto cho request đâu là response đâu là filter thì để riêng package ó để đỡ rối
 @Data
 @Builder
 @NoArgsConstructor

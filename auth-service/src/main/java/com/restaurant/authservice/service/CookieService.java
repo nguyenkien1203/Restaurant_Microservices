@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
+//TODO bổ sung interface
+// Nếu đã format chuẩn phải có interface và có impl thì chuẩn hóa tất cả. kể cả 1 method cũng phải có 2 class
 @Service
 public class CookieService {
     @Value("${jwt.cookie-name:auth_token}")

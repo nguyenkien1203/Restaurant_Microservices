@@ -19,6 +19,11 @@ import java.util.Optional;
 
 import static com.restaurant.authservice.entity.AuthEntity.UserRole.ADMIN;
 
+//TODO customer BaseCrudFactory
+//với BaseCrudFactory a đang define sẵn dangj cache redis nếu cần thêm 1 số caái như cách local ram, cách hasmap,...
+// thì có th tạo 1 class extend BaseCrudFactory rồi bổ sung hoặc Override lại các logix getModel, getEntity, exists,...
+// a ví dụ thằng này cần cache ram trước nếu ram k có mới get db thì sẽ Override lại hàm getModel để nó cehck ram trước nếu k có mới
+// call super.getModel() để lấy từ redis hoặc db
 @Slf4j
 @Component
 public class AuthFactory extends BaseCrudFactory<Long, AuthDto, Long, AuthEntity, AuthRepository> {
